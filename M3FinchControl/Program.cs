@@ -285,7 +285,7 @@ namespace M3FinchControl
             // *************
             // * Constants *
             // *************
-            const int MOVE_DELAY = 1000;
+            const int MOVE_DELAY = 750;
 
             menus[currentMenu].Clear();
             menus[currentMenu].WriteLine(name + ": Well, here goes nothing!");
@@ -308,6 +308,7 @@ namespace M3FinchControl
             //reset everything
             myFinch.setMotors(0, 0);
             myFinch.setLED(0, 255, 0);
+            myFinch.noteOff();
         }
         #endregion
 
