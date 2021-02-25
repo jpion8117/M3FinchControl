@@ -33,7 +33,8 @@ namespace M3FinchControl
         {
             main,
             connect,
-            talentShow
+            talentShow,
+            recorderMenu
         }
         static void Main(string[] args)
         {
@@ -53,9 +54,10 @@ namespace M3FinchControl
             Console.ForegroundColor = ConsoleColor.DarkBlue;
             
             //load menus
-            menus[(int)title.main].LoadTemplate("MainMenu.jp");
-            menus[(int)title.connect].LoadTemplate("ConnectFinch.jp");
-            menus[(int)title.talentShow].LoadTemplate("TalentShow.jp");
+            menus[(int)title.main].LoadTemplate("config\\MainMenu.jp");
+            menus[(int)title.connect].LoadTemplate("config\\ConnectFinch.jp");
+            menus[(int)title.talentShow].LoadTemplate("config\\TalentShow.jp");
+            menus[(int)title.recorderMenu].LoadTemplate("config\\DataRecorder.jp");
 
             //refresh main menu
             menus[(int)title.main].RefreshMenu(true);
@@ -200,9 +202,9 @@ namespace M3FinchControl
                 }
                 else
                 {
-                    rgb[RED] = 0 + (finchTempF - finchTempFStart) * SCALE_FACTOR;
+                    rgb[RED] = 0 + ((finchTempF - finchTempFStart) * SCALE_FACTOR);
                     rgb[GREEN] = 0;
-                    rgb[BLUE] = 255 - (finchTempF - finchTempFStart) * SCALE_FACTOR;
+                    rgb[BLUE] = 255 - ((finchTempF - finchTempFStart) * SCALE_FACTOR);
 
                     //make sure blue and green stay valid
                     if (rgb[BLUE] < 0) 
@@ -214,7 +216,7 @@ namespace M3FinchControl
                     {
                         PlayChestOpenSong();
                         rgb[RED] = 255;
-                    } 
+                    }
                 }
 
                 //set finch rgb
