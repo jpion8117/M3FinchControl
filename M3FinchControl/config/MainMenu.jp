@@ -4,8 +4,8 @@
 ###                                ###                         |                                                        ###
 ###   Super Finch Control 9000!    ###           Connect Finch |                                                        ###
 ###      ^ Main Menu               ###             Talent Show |                                                        ###
+###                                ###           Data Recorder |                                                        ###
 ###                                ###                    Quit |                                                        ###
-###                                ###                         |                                                        ###
 ###                                ###                         |                                                        ###
 ###               *                ###                         |                                                        ###
 ###             *   *              ###                         |                                                        ###
@@ -27,12 +27,13 @@
 <info>
 	selectorCol={65}
 	firstLine={3}
-	lastLine={5}
+	lastLine={6}
 	selectionIndicator={<--Selection}
 	output={39, 13, 118, 20}
 	options={
 		connectMenu,
-		talentShowMenu,		
+		talentShowMenu,
+		dataRecordMenu,
 		quit
 	}
 </info>

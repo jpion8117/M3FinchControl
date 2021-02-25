@@ -122,6 +122,11 @@ namespace M3FinchControl
                     menus[(int)title.talentShow].RefreshMenu(true);
                     break;
 
+                case "dataRecordMenu":
+                    currentMenu = (int)title.recorderMenu;
+                    menus[currentMenu].RefreshMenu(true);
+                    break;
+
                 // **********************
                 // * Connect Finch Menu *
                 // **********************
@@ -145,6 +150,10 @@ namespace M3FinchControl
                 case "mix":
                     MixUp();
                     break;
+
+                // **********************
+                // * Data Recorder Menu *
+                // **********************
 
                 // *******************************
                 // * Universal Selection Options *
