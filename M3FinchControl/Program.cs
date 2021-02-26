@@ -173,6 +173,24 @@ namespace M3FinchControl
                 // ***************************
                 // * Data Recorder Logs Menu *
                 // ***************************
+                case "viewLast":
+                    viewData();
+                    break;
+
+                case "saveDataLog":
+                    menus[currentMenu].Clear();
+                    menus[currentMenu].WriteLine("Feature coming soon...");
+                    System.Threading.Thread.Sleep(2000);
+                    menus[currentMenu].Clear();
+                    break;
+
+                case "loadDataLog":
+                    menus[currentMenu].Clear();
+                    menus[currentMenu].WriteLine("Feature coming soon...");
+                    System.Threading.Thread.Sleep(2000);
+                    menus[currentMenu].Clear();
+                    break;
+
                 case "returnDataRecord":
                     currentMenu = (int)title.recorderMenu;
                     menus[currentMenu].RefreshMenu(true);
@@ -500,6 +518,44 @@ namespace M3FinchControl
             // * Configuration *
             // *****************
             recorder = new DataRecorder(dataPoints, timeBetween, units);
+        }
+
+        static void viewData()
+        {
+            string line = "";
+            int average = 0;
+
+            //make sure there is data to work with
+            if (recorder.dataAccuired) 
+            {
+                //print out the header
+                menus[currentMenu].Clear();
+                menus[currentMenu].WriteLine(" Entry | Temp C | Temp F");
+                menus[currentMenu].WriteLine("=======|========|=======");
+
+                //print out the data
+                for (int i = 0; i < recorder.temperatures.Length; ++i)
+                {
+                    line = "#" + i.ToString("D3") + "   | " + recorder.temperatures[i].ToString("D3") + "\u00b0C  | " + 
+                        CelsiusToFahrenheit(recorder.temperatures[i]).ToString("D3") + "\u00b0F";
+                    menus[currentMenu].WriteLine(line);
+                }
+
+                //give the user the average temperature
+                average = (int)recorder.temperatures.Average();
+                menus[currentMenu].WriteLine("\nThe average temperature was " + average.ToString("D3") + "\u00b0C or " + 
+                    CelsiusToFahrenheit((double)average).ToString("D3") + "\u00b0F");
+            }
+            else
+            {
+                //show user an error
+                menus[currentMenu].Clear();
+                menus[currentMenu].WriteLine("Please record some data first.");
+                menus[currentMenu].WriteLine("\nPress any key to continue...");
+                Console.Beep();
+                Console.ReadKey();
+                menus[currentMenu].Clear();
+            }
         }
 
         #endregion

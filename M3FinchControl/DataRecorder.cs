@@ -28,6 +28,7 @@ namespace M3FinchControl
             TIME_SCALE = (int)timeUnit;
 
             temperatures = new int[NUMBER_OF_RECORDS];
+            dataAccuired = false;
         }
 
         /// <summary>
@@ -39,11 +40,15 @@ namespace M3FinchControl
         {
             string line;
 
+            //let the user know the finch is in recording mode
+            myFinch.setLED(255, 128, 0);
+
             //write the data table head
             curentMenu.Clear();
             curentMenu.WriteLine(" Entry  | Temp C   | Temp F");
+            curentMenu.WriteLine("========|==========|=======");
 
-            for(int i = 0; i < NUMBER_OF_RECORDS; ++i)
+            for (int i = 0; i < NUMBER_OF_RECORDS; ++i)
             {
                 //get the temperature and convert it to an int
                 //What! I like whole numbers unless there is a good reason for decimal points...
@@ -54,8 +59,23 @@ namespace M3FinchControl
                 curentMenu.WriteLine(line);
 
                 //pause the system until it's time to take another data point
-                System.Threading.Thread.Sleep(TIME_BETWEEN_RECORDS * TIME_SCALE);
+                myFinch.wait(TIME_BETWEEN_RECORDS * TIME_SCALE);
             }
+
+            //mark the data as aquired so other parts of the program may call on it
+            dataAccuired = true;
+
+            //let the user know the data is finished recording
+            myFinch.setLED(0, 255, 0);
+            myFinch.noteOn(5000);
+            myFinch.wait(500);
+            myFinch.noteOff();
+
+            curentMenu.WriteLine("\nData Recording Complete.");
+            curentMenu.WriteLine("You may view the data by selecting the \"View Records\" option.");
+            curentMenu.WriteLine("Press any key to continue...");
+            Console.ReadKey();
+            curentMenu.Clear();
         }
         int CelsiusToFahrenheit(int tempC)
         {
@@ -65,7 +85,16 @@ namespace M3FinchControl
         private readonly int NUMBER_OF_RECORDS;
         private readonly int TIME_BETWEEN_RECORDS;
         private readonly int TIME_SCALE;
-        private int[] temperatures;
+        public int[] temperatures
+        {
+            private set;
+            get;
+        }
+        public bool dataAccuired
+        {
+            private set;
+            get;
+        }
 
     }
 }
