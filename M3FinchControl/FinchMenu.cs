@@ -51,7 +51,7 @@ namespace M3FinchControl
             properties.maxCharPerLine = 80;
             properties.maxOutputChars = 2000;
             selectionIndicator = "*";
-            inputString = "<";
+            inputString = "";
             outputString = inputString;
             formatedOutput = new string[1];
             enterKeyPressed = false;
@@ -448,11 +448,6 @@ namespace M3FinchControl
             //if the user pressed a key, read their input
             if (Console.KeyAvailable)
             {
-                //remove the input identifier before accepting input
-                int inputIdentifierIndex = inputString.LastIndexOf('<');
-                if (inputIdentifierIndex >= 0)
-                    inputString = inputString.Remove(inputString.Length - 1);
-
                 //gets the key that was pressed
                 key = Console.ReadKey(true);
                 keyChar = key.KeyChar;
@@ -463,20 +458,7 @@ namespace M3FinchControl
                     // displays an error if the user is already at the top of the menu
                     if (properties.currentOption == 0)
                     {
-                        //clear output area
-                        Clear();
-
-                        //write error to output area and beep
-                        WriteLine("First Option already selected.\n");
-                        WriteLine("Press any key to continue...");
                         Console.Beep();
-
-                        //display the error
-                        DisplayOutput();
-
-                        //wait for user input to clear
-                        Console.ReadKey();
-                        Clear();
                     }
                     else
                     {
@@ -493,21 +475,7 @@ namespace M3FinchControl
                 {
                     if (properties.currentOption == properties.lastLine - properties.firstLine)
                     {
-                        //clear output area
-                        Clear();
-
-                        //write error to output area and beep
-                        WriteLine("Last Option already selected.\n");
-                        WriteLine("Press any key to continue...");
                         Console.Beep();
-
-                        //display the error
-                        DisplayOutput();
-
-                        //wait for user input to clear
-                        Console.ReadKey();
-                        Clear();
-
                     }
                     else
                     {
@@ -533,8 +501,8 @@ namespace M3FinchControl
                         if (inputString.Length > 0)
                         {
                             //remove previous input string from the output string;
-                            int inputStringIndex = outputString.LastIndexOf(inputString);
-                            if (inputStringIndex >= 0 & outputString.Length != 0)
+                            int inputStringIndex = outputString.Length - inputString.Length;
+                            if (inputStringIndex >= 0 & outputString.Length != 0 & inputString.Length > 0)
                                 outputString = outputString.Remove(inputStringIndex);
 
                             //remove the last char and the input identifier from the input string
@@ -544,8 +512,8 @@ namespace M3FinchControl
                     else
                     {
                         //remove previous input string from the output string;
-                        int inputStringIndex = outputString.LastIndexOf(inputString);
-                        if (inputStringIndex >= 0 & outputString.Length != 0)
+                        int inputStringIndex = outputString.Length - inputString.Length;
+                        if (inputStringIndex >= 0 & outputString.Length != 0 & inputString.Length > 0)
                             outputString = outputString.Remove(inputStringIndex);
 
                         // add char to the input string
@@ -553,9 +521,6 @@ namespace M3FinchControl
 
                     }
                 }
-
-                //add the input identifier back
-                inputString += '<';
 
                 //update selected option
                 selectedOption = optionIDs[properties.currentOption];
@@ -566,9 +531,11 @@ namespace M3FinchControl
         private void DisplayOutput()
         {
             //remove previous input string from the output string;
-            int inputStringIndex = outputString.LastIndexOf(inputString);
-            if (inputStringIndex >= 0 & outputString.Length != 0)
+            int inputStringIndex = outputString.Length - inputString.Length;
+            if (inputStringIndex >= 0 & outputString.Length != 0 & inputString.Length > 0 & inputString.Length > 0)
+            {
                 outputString = outputString.Remove(inputStringIndex);
+            }
 
             //add the input string to the end of the output string
             outputString += inputString;
@@ -712,79 +679,11 @@ namespace M3FinchControl
 
             while (gatheringInput)
             {
-                //remove the input identifier before accepting input
-                int inputIdentifierIndex = inputString.LastIndexOf('<');
-                if (inputIdentifierIndex >= 0)
-                    inputString = inputString.Remove(inputString.Length - 1);
-
                 //gets the key that was pressed
                 key = Console.ReadKey(true);
                 keyChar = key.KeyChar;
 
-                //check if the key was one of the arrows
-                if (key.Key == ConsoleKey.UpArrow)
-                {
-                    // displays an error if the user is already at the top of the menu
-                    if (properties.currentOption == 0)
-                    {
-                        //clear output area
-                        Clear();
-
-                        //write error to output area and beep
-                        WriteLine("First Option already selected.\n");
-                        WriteLine("Press any key to continue...");
-                        Console.Beep();
-
-                        //display the error
-                        DisplayOutput();
-
-                        //wait for user input to clear
-                        Console.ReadKey();
-                        Clear();
-                    }
-                    else
-                    {
-                        //clear the option selector
-                        Console.SetCursorPosition(properties.selectorCol, properties.firstLine + properties.currentOption);
-                        for (int curChar = 0; curChar < selectionIndicator.Length; ++curChar)
-                            Console.Write(" ");
-
-                        //move selected option back
-                        properties.currentOption--;
-                    }
-                }
-                else if (key.Key == ConsoleKey.DownArrow)
-                {
-                    if (properties.currentOption == properties.lastLine - properties.firstLine)
-                    {
-                        //clear output area
-                        Clear();
-
-                        //write error to output area and beep
-                        WriteLine("Last Option already selected.\n");
-                        WriteLine("Press any key to continue...");
-                        Console.Beep();
-
-                        //display the error
-                        DisplayOutput();
-
-                        //wait for user input to clear
-                        Console.ReadKey();
-                        Clear();
-
-                    }
-                    else
-                    {
-                        //clear the option selector
-                        Console.SetCursorPosition(properties.selectorCol, properties.firstLine + properties.currentOption);
-                        for (int curChar = 0; curChar < selectionIndicator.Length; ++curChar)
-                            Console.Write(" ");
-
-                        //advance selected option
-                        properties.currentOption++;
-                    }
-                }
-                else if (key.Key == ConsoleKey.Enter)
+                if (key.Key == ConsoleKey.Enter)
                 {
                     gatheringInput = false;
                 }
@@ -796,9 +695,14 @@ namespace M3FinchControl
                         if (inputString.Length > 0)
                         {
                             //remove previous input string from the output string;
-                            int inputStringIndex = outputString.LastIndexOf(inputString);
-                            if (inputStringIndex >= 0 & outputString.Length != 0)
-                                outputString = outputString.Remove(inputStringIndex);
+                            if (inputString != "")
+                            {
+                                int inputStringIndex = outputString.Length - inputString.Length;
+                                if (inputStringIndex >= 0 & outputString.Length != 0 & inputString.Length > 0)
+                                {
+                                    outputString = outputString.Remove(inputStringIndex);
+                                }
+                            }
 
                             //remove the last char and the input identifier from the input string
                             inputString = inputString.Remove(inputString.Length - 1, 1);
@@ -807,9 +711,14 @@ namespace M3FinchControl
                     else
                     {
                         //remove previous input string from the output string;
-                        int inputStringIndex = outputString.LastIndexOf(inputString);
-                        if (inputStringIndex >= 0 & outputString.Length != 0)
-                            outputString = outputString.Remove(inputStringIndex);
+                        if (inputString != "")
+                        {
+                            int inputStringIndex = outputString.Length - inputString.Length;
+                            if (inputStringIndex >= 0 & outputString.Length != 0 & inputString.Length > 0)
+                            {
+                                outputString = outputString.Remove(inputStringIndex);
+                            }
+                        }
 
                         // add char to the input string
                         inputString += keyChar;

@@ -24,6 +24,7 @@ namespace M3FinchControl
         // **********************************
         static Menu[] menus = new Menu[Enum.GetNames(typeof(title)).Length];
         static Finch myFinch = new Finch();
+        static DataRecorder recorder = new DataRecorder();
         static string name = "";
         static bool finchConnected = false;
         static bool running = true;
@@ -34,7 +35,8 @@ namespace M3FinchControl
             main,
             connect,
             talentShow,
-            recorderMenu
+            recorderMenu,
+            recorderLogsMenu
         }
         static void Main(string[] args)
         {
@@ -54,10 +56,11 @@ namespace M3FinchControl
             Console.ForegroundColor = ConsoleColor.DarkBlue;
             
             //load menus
-            menus[(int)title.main].LoadTemplate("config\\MainMenu.jp");
-            menus[(int)title.connect].LoadTemplate("config\\ConnectFinch.jp");
-            menus[(int)title.talentShow].LoadTemplate("config\\TalentShow.jp");
-            menus[(int)title.recorderMenu].LoadTemplate("config\\DataRecorder.jp");
+            menus[(int)title.main].LoadTemplate("config\\MainMenu.txt");
+            menus[(int)title.connect].LoadTemplate("config\\ConnectFinch.txt");
+            menus[(int)title.talentShow].LoadTemplate("config\\TalentShow.txt");
+            menus[(int)title.recorderMenu].LoadTemplate("config\\DataRecorder.txt");
+            menus[(int)title.recorderLogsMenu].LoadTemplate("config\\ViewDataRecords.txt");
 
             //refresh main menu
             menus[(int)title.main].RefreshMenu(true);
@@ -154,6 +157,26 @@ namespace M3FinchControl
                 // **********************
                 // * Data Recorder Menu *
                 // **********************
+                case "startRecorder":
+                    recorder.Start(myFinch, ref menus[currentMenu]);
+                    break;
+
+                case "configureRecorder":
+                    configureRecorder();
+                    break;
+
+                case "viewRecords":
+                    currentMenu = (int)title.recorderLogsMenu;
+                    menus[(int)title.recorderLogsMenu].RefreshMenu(true);
+                    break;
+
+                // ***************************
+                // * Data Recorder Logs Menu *
+                // ***************************
+                case "returnDataRecord":
+                    currentMenu = (int)title.recorderMenu;
+                    menus[currentMenu].RefreshMenu(true);
+                    break;
 
                 // *******************************
                 // * Universal Selection Options *
@@ -323,6 +346,164 @@ namespace M3FinchControl
         }
         #endregion
 
+        #region Data Recorder Methods
+        /// <summary>
+        /// Get data recorder settings from the user and configure the DataRecorder to begin recording
+        /// </summary>
+        static void configureRecorder()
+        {
+            // *************
+            // * Variables *
+            // *************
+            string userInput = "";
+            int dataPoints = 8;
+            int timeBetween = 10;
+            timeUnits units = timeUnits.seconds;
+            bool validating;
+
+            // ************************
+            // * Input and Validation *
+            // ************************
+
+            //userPrompt: use default or custom configuration
+            validating = true;
+            while (validating)
+            {
+                menus[currentMenu].Clear();
+
+                menus[currentMenu].WriteLine("Default Configuration...");
+                menus[currentMenu].WriteLine("                         Data Points: 8");
+                menus[currentMenu].WriteLine("                               Delay: 10");
+                menus[currentMenu].WriteLine("                         Delay Units: Seconds");
+                menus[currentMenu].Write("\nWould you like to use the default configuration? ");
+
+                userInput = menus[currentMenu].ReadLine().ToLower();
+
+                if (userInput == "yes" | userInput == "y")
+                {
+                    return;
+                }
+                else if (userInput == "no" | userInput == "n")
+                {
+                    validating = false;
+                }
+                else
+                {
+                    menus[currentMenu].Clear();
+                    menus[currentMenu].WriteLine("Please enter yes or no. Press any key to continue...");
+                    Console.ReadKey();
+                }
+            }
+
+            //userPrompt: how many data points to capture.
+            validating = true;
+            while (validating)
+            {
+                menus[currentMenu].Clear();
+                menus[currentMenu].Write("How many data points would you like to capture? (You may also type default to use the default: 8) ");
+                userInput = menus[currentMenu].ReadLine().ToLower();
+
+                if (int.TryParse(userInput, out dataPoints))
+                {
+                    if (dataPoints > 0 & dataPoints <= 50)
+                    {
+                        validating = false;
+                    }
+                    else
+                    {
+                        menus[currentMenu].Clear();
+                        menus[currentMenu].WriteLine("Invalid Selection: Please enter a valid number between 1 - 30 or \"default.\" Press any key to continue...");
+                        Console.ReadKey();
+                    }
+                }
+                else if (userInput == "default" | userInput == "d")
+                {
+                    validating = false;
+                }
+                else
+                {
+                    menus[currentMenu].Clear();
+                    menus[currentMenu].WriteLine("Invalid Selection: Please enter a valid number between 1 - 30 or \"default.\" Press any key to continue...");
+                    Console.ReadKey();
+                }
+            }
+
+            //userPrompt: time unit to use
+            validating = true;
+            while (validating)
+            {
+                menus[currentMenu].Clear();
+                menus[currentMenu].Write("What unit of time would you like to use: milliseconds, seconds, or minutes? (You may also type default to use the default: seconds) ");
+                userInput = menus[currentMenu].ReadLine().ToLower();
+
+                if (userInput == "seconds" | userInput == "sec")
+                {
+                    units = timeUnits.seconds;
+                    validating = false;
+                }
+                else if (userInput == "milliseconds" | userInput == "mil")
+                {
+                    units = timeUnits.miliseconds;
+                    validating = false;
+                }
+                else if (userInput == "minutes" | userInput == "min")
+                {
+                    units = timeUnits.minutes;
+                    validating = false;
+                }
+                else if (userInput == "default" | userInput == "d")
+                {
+                    validating = false;
+                }
+                else
+                {
+                    menus[currentMenu].Clear();
+                    menus[currentMenu].WriteLine("Invalid Selection: Please enter one of the following: milliseconds, seconds, minutes or \"default.\" Press any key to continue...");
+                    Console.ReadKey();
+                }
+            }
+
+            //userPrompt: how long between data points.
+            validating = true;
+            while (validating)
+            {
+                menus[currentMenu].Clear();
+                menus[currentMenu].Write("How much time in " + units + "do you want to pass between data points? (You may also type default to use the default: 10) ");
+                userInput = menus[currentMenu].ReadLine().ToLower();
+
+                if (int.TryParse(userInput, out timeBetween))
+                {
+                    if (timeBetween > 0 & timeBetween <= 120)
+                    {
+                        validating = false;
+                    }
+                    else
+                    {
+                        menus[currentMenu].Clear();
+                        menus[currentMenu].WriteLine("Invalid Selection: Please enter a valid number between 1 - 30 or \"default.\" Press any key to continue...");
+                        Console.ReadKey();
+                    }
+                }
+                else if (userInput == "default" | userInput == "d")
+                {
+                    validating = false;
+                }
+                else
+                {
+                    menus[currentMenu].Clear();
+                    menus[currentMenu].WriteLine("Invalid Selection: Please enter a valid number between 1 - 30 or \"default.\" Press any key to continue...");
+                    Console.ReadKey();
+                }
+            }
+
+            // *****************
+            // * Configuration *
+            // *****************
+            recorder = new DataRecorder(dataPoints, timeBetween, units);
+        }
+
+        #endregion
+
         #region Connections
         static string ConnectFinch()
         {
@@ -330,6 +511,7 @@ namespace M3FinchControl
             // * Variables *
             // *************
             string name = "";
+            string userInput = "";
             bool namingFinch = true;
 
             while (namingFinch)
@@ -337,7 +519,7 @@ namespace M3FinchControl
                 //inform the user that we're going to try connecting to the finch
                 menus[(int)title.connect].Clear();
                 menus[(int)title.connect].WriteLine("We are going to attemt to connect to your Finch.\n");
-                menus[(int)title.connect].Write("What would you like to name it? ");
+                menus[(int)title.connect].Write("What would you like to name it?  ");
 
                 //wait for user enter a name and press enter
                 name = menus[(int)title.connect].ReadLine();
@@ -346,17 +528,26 @@ namespace M3FinchControl
                 menus[(int)title.connect].Write("Are you sure you want to name it " + name + "? ");
 
                 //wait for user answer and evaluate
-                if (menus[(int)title.connect].ReadLine().ToLower() == "yes")
+                userInput = menus[(int)title.connect].ReadLine();
+                if (userInput.ToLower() == "yes")
+                {
                     namingFinch = false;
+                }
+                else if (userInput.ToLower() == "y") 
+                {
+                    namingFinch = false;
+                }
             }
 
             if (myFinch.connect())
             {
-                menus[(int)title.connect].Clear();
-
                 menus[(int)title.connect].WriteLine("\n\nConnection to " + name + " was successful!\n\n");
 
                 myFinch.setLED(0, 255, 0);
+
+                System.Threading.Thread.Sleep(3000);
+
+                menus[(int)title.connect].Clear();
             }
             else
             {
