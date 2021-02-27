@@ -491,13 +491,14 @@ namespace M3FinchControl
                 else if (key.Key == ConsoleKey.Enter)
                 {
                     enterKeyPressed = true;
-                    inputString = "";
+                    //inputString = "";
                 }
                 else if (keyChar != '\u0000')
                 {
                     //check for the backspace key
                     if (keyChar == (char)8)
                     {
+                        //make sure there is input to delete
                         if (inputString.Length > 0)
                         {
                             //remove previous input string from the output string;
@@ -505,8 +506,8 @@ namespace M3FinchControl
                             if (inputStringIndex >= 0 & outputString.Length != 0 & inputString.Length > 0)
                                 outputString = outputString.Remove(inputStringIndex);
 
-                            //remove the last char and the input identifier from the input string
-                            inputString = inputString.Remove(inputString.Length - 1, 1);
+                            //remove the last char from the input string
+                            inputString = inputString.Remove(inputString.Length - 1);
                         }
                     }
                     else
@@ -705,9 +706,10 @@ namespace M3FinchControl
                             }
 
                             //remove the last char and the input identifier from the input string
-                            inputString = inputString.Remove(inputString.Length - 1, 1);
+                            inputString = inputString.Remove(inputString.Length - 1);
                         }
                     }
+                    //some valid char was pressed
                     else
                     {
                         //remove previous input string from the output string;
@@ -725,6 +727,8 @@ namespace M3FinchControl
 
                     }
                 }
+                //add the input string to the output string
+                outputString += inputString;
 
                 DisplayOutput();
             }
