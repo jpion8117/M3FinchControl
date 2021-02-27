@@ -139,6 +139,13 @@ namespace M3FinchControl
                     //verify the finch is connected
                     finchConnected = name != "___FAILED_TO_CONNECT___";
 
+                    //if the finch connected successfully, return to the main menu
+                    if (finchConnected) 
+                    {
+                        currentMenu = (int)title.main;
+                        menus[currentMenu].RefreshMenu(true);
+                    }
+
                     break;
 
                 // ********************
@@ -374,9 +381,9 @@ namespace M3FinchControl
             // * Variables *
             // *************
             string userInput = "";
-            int dataPoints = 8;
-            int timeBetween = 10;
-            timeUnits units = timeUnits.seconds;
+            int dataPoints = recorder.NUMBER_OF_RECORDS;
+            int timeBetween = recorder.TIME_BETWEEN_RECORDS;
+            timeUnits units = recorder.TIME_UNIT;
             bool validating;
 
             // ************************
@@ -389,19 +396,20 @@ namespace M3FinchControl
             {
                 menus[currentMenu].Clear();
 
-                menus[currentMenu].WriteLine("Default Configuration...");
-                menus[currentMenu].WriteLine("                         Data Points: 8");
-                menus[currentMenu].WriteLine("                               Delay: 10");
-                menus[currentMenu].WriteLine("                         Delay Units: Seconds");
-                menus[currentMenu].Write("\nWould you like to use the default configuration? ");
+                menus[currentMenu].WriteLine("The current configuration is...");
+                menus[currentMenu].WriteLine("                         Data Points: " + dataPoints.ToString());
+                menus[currentMenu].WriteLine("                               Delay: " + timeBetween.ToString());
+                menus[currentMenu].WriteLine("                         Delay Units: " + units);
+                menus[currentMenu].Write("\nWould you like to change the current configuration? ");
 
                 userInput = menus[currentMenu].ReadLine().ToLower();
 
-                if (userInput == "yes" | userInput == "y")
+                if (userInput == "no" | userInput == "n")
                 {
+                    menus[currentMenu].Clear();
                     return;
                 }
-                else if (userInput == "no" | userInput == "n")
+                else if (userInput == "yes" | userInput == "y")
                 {
                     validating = false;
                 }
@@ -436,6 +444,7 @@ namespace M3FinchControl
                 }
                 else if (userInput == "default" | userInput == "d")
                 {
+                    dataPoints = 8;
                     validating = false;
                 }
                 else
@@ -461,7 +470,7 @@ namespace M3FinchControl
                 }
                 else if (userInput == "milliseconds" | userInput == "mil")
                 {
-                    units = timeUnits.miliseconds;
+                    units = timeUnits.milliseconds;
                     validating = false;
                 }
                 else if (userInput == "minutes" | userInput == "min")
@@ -471,6 +480,7 @@ namespace M3FinchControl
                 }
                 else if (userInput == "default" | userInput == "d")
                 {
+                    units = timeUnits.seconds;
                     validating = false;
                 }
                 else
@@ -486,24 +496,38 @@ namespace M3FinchControl
             while (validating)
             {
                 menus[currentMenu].Clear();
-                menus[currentMenu].Write("How much time in " + units + "do you want to pass between data points? (You may also type default to use the default: 10) ");
+                menus[currentMenu].Write("How much time in " + units + " do you want to pass between data points? (You may also type default to use the default: 10) ");
                 userInput = menus[currentMenu].ReadLine().ToLower();
 
                 if (int.TryParse(userInput, out timeBetween))
                 {
-                    if (timeBetween > 0 & timeBetween <= 120)
+                    if ((timeBetween > 0 & timeBetween <= 120) & units != timeUnits.milliseconds)
+                    {
+                        validating = false;
+                    }
+                    else if ((timeBetween > 0 & timeBetween <= 60000) & units == timeUnits.milliseconds)
                     {
                         validating = false;
                     }
                     else
                     {
-                        menus[currentMenu].Clear();
-                        menus[currentMenu].WriteLine("Invalid Selection: Please enter a valid number between 1 - 30 or \"default.\" Press any key to continue...");
-                        Console.ReadKey();
+                        if (units == timeUnits.milliseconds)
+                        {
+                            menus[currentMenu].Clear();
+                            menus[currentMenu].WriteLine("Invalid Selection: Please enter a valid number between 1 - 1000 or \"default.\" Press any key to continue...");
+                            Console.ReadKey();
+                        }
+                        else
+                        {
+                            menus[currentMenu].Clear();
+                            menus[currentMenu].WriteLine("Invalid Selection: Please enter a valid number between 1 - 120 or \"default.\" Press any key to continue...");
+                            Console.ReadKey();
+                        }
                     }
                 }
                 else if (userInput == "default" | userInput == "d")
                 {
+                    timeBetween = 10;
                     validating = false;
                 }
                 else
@@ -517,6 +541,14 @@ namespace M3FinchControl
             // *****************
             // * Configuration *
             // *****************
+            menus[currentMenu].Clear();
+            menus[currentMenu].WriteLine("New configuration saved. You may view/change the configuration \n" +
+                                         "by reselecting \"Recorder Configuration.\" If you're ready to start \n" +
+                                         "the data recording, select \"Start Recording.\"\n");
+            menus[currentMenu].WriteLine("Press any key to continue...");
+            Console.ReadKey();
+            menus[currentMenu].Clear();
+
             recorder = new DataRecorder(dataPoints, timeBetween, units);
         }
 

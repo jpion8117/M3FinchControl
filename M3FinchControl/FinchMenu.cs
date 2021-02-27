@@ -14,7 +14,7 @@ using FinchAPI;
 //                    through out the rest of the program.
 //            Author: Josh Pion
 //      Date Created: 2/17/2021
-//     Last Modified: 2/19/2021
+//     Last Modified: 2/26/2021
 //***************************************************************
 
 namespace M3FinchControl

@@ -8,7 +8,7 @@ namespace M3FinchControl
 {
     enum timeUnits
     {
-        miliseconds = 1,
+        milliseconds = 1,
         seconds = 1000,
         minutes = 60000
     }
@@ -20,12 +20,13 @@ namespace M3FinchControl
         /// <param name="numberOfRecords">How many times the finch will take data. Default is 8</param>
         /// <param name="timeBetweenRecords">How much time will pass between data points. Default is 10</param>
         /// <param name="timeUnit">The unit of time used in the delay. This can be set to one of 3 options with timeUnits.seconds being the 
-        /// default. The other options available are timeUnits.miliseconds and timeUnits.minutes</param>
+        /// default. The other options available are timeUnits.milliseconds and timeUnits.minutes</param>
         public DataRecorder(int numberOfRecords = 8, int timeBetweenRecords = 10, timeUnits timeUnit = timeUnits.seconds)
         {
             NUMBER_OF_RECORDS = numberOfRecords;
             TIME_BETWEEN_RECORDS = timeBetweenRecords;
             TIME_SCALE = (int)timeUnit;
+            TIME_UNIT = timeUnit;
 
             temperatures = new int[NUMBER_OF_RECORDS];
             dataAccuired = false;
@@ -72,7 +73,7 @@ namespace M3FinchControl
             myFinch.noteOff();
 
             curentMenu.WriteLine("\nData Recording Complete.");
-            curentMenu.WriteLine("You may view the data by selecting the \"View Records\" option.");
+            curentMenu.WriteLine("You may view the data by selecting the \"View Recordings\" option.");
             curentMenu.WriteLine("Press any key to continue...");
             Console.ReadKey();
             curentMenu.Clear();
@@ -82,9 +83,10 @@ namespace M3FinchControl
             return (int)(tempC * 1.8 + 32);
         }
 
-        private readonly int NUMBER_OF_RECORDS;
-        private readonly int TIME_BETWEEN_RECORDS;
-        private readonly int TIME_SCALE;
+        public readonly int NUMBER_OF_RECORDS;
+        public readonly int TIME_BETWEEN_RECORDS;
+        public readonly int TIME_SCALE;
+        public readonly timeUnits TIME_UNIT;
         public int[] temperatures
         {
             private set;
