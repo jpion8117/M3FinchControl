@@ -55,6 +55,7 @@ namespace M3FinchControl
             outputString = inputString;
             formatedOutput = new string[1];
             enterKeyPressed = false;
+            onHoverUpdate = false;
             selectedOption = "";
         }
         public void SetFinchRobot(Finch finch)
@@ -410,9 +411,11 @@ namespace M3FinchControl
             {
                 //reset the selector position
                 properties.currentOption = 0;
+                selectedOption = optionIDs[properties.currentOption];
 
-                //clear the screen
+                //clear the screen set on hover update to true
                 Console.Clear();
+                onHoverUpdate = true;
 
                 //set console config
                 Console.WindowHeight = properties.consoleHeight;
@@ -428,7 +431,10 @@ namespace M3FinchControl
                 //move the cursor back to 0,0
                 Console.SetCursorPosition(0, 0);
             }
-
+            else
+            {
+                onHoverUpdate = false;
+            }
             //line the cursor back up
             Console.SetCursorPosition(properties.selectorCol, properties.firstLine + properties.currentOption);
 
@@ -469,6 +475,10 @@ namespace M3FinchControl
 
                         //move selected option back
                         properties.currentOption--;
+
+                        //set hover indcator to true and clear output
+                        Clear();
+                        onHoverUpdate = true;
                     }
                 }
                 else if (key.Key == ConsoleKey.DownArrow)
@@ -486,6 +496,10 @@ namespace M3FinchControl
 
                         //advance selected option
                         properties.currentOption++;
+
+                        //set hover indcator to true and clear output
+                        Clear();
+                        onHoverUpdate = true;
                     }
                 }
                 else if (key.Key == ConsoleKey.Enter)
@@ -756,6 +770,11 @@ namespace M3FinchControl
             private set;
         }
         public string selectedOption
+        {
+            get;
+            private set;
+        }
+        public bool onHoverUpdate
         {
             get;
             private set;

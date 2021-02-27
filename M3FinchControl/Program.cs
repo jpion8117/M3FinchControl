@@ -67,12 +67,22 @@ namespace M3FinchControl
 
             while (running) 
             {
+                //checks to see if the user moved the selection cursor
+                if (menus[currentMenu].onHoverUpdate)
+                {
+                    //reads the current menu option and outputs hover info if there is any.
+                    MenuNavigation(false);
+                }
+
                 //updates input/output of the menu
                 menus[currentMenu].RefreshMenu();
 
                 //checks if user pressed the enter key
                 if (menus[currentMenu].enterKeyPressed)
                 {
+                    //clears the IO
+                    menus[currentMenu].Clear();
+
                     //reads the option pressed by the user and acts on it.
                     MenuNavigation();
                 }
@@ -106,118 +116,271 @@ namespace M3FinchControl
             //wait for user input
             Console.ReadKey();
         }
-
-        static void MenuNavigation()
+        /// <summary>
+        /// This is the main method that handles all the navagation of the program
+        /// when called with the default true parameter it will perform functions 
+        /// assuming the user pressed the enter key. When called in alt mode, 
+        /// (onSelect false) it will perform the on hover functions.
+        /// </summary>
+        /// <param name="onSelect">Toggles between normal navagation clicks and alt hover actions (true = click, false = hover)</param>
+        static void MenuNavigation(bool onSelect = true)
         {
+            //display a warning if the finch is not connected and the finches name if it is
+            if(!onSelect & !finchConnected)
+            {
+                menus[currentMenu].WriteLine("WARNING: finch robot not connected...");
+                menus[currentMenu].WriteLine("            finch related functions will not work until");
+                menus[currentMenu].WriteLine("            your finch is connected!\n");
+            }
+            else if(!onSelect)
+            {
+                menus[currentMenu].WriteLine(name + " is standing by for commands...\n");
+            }
+
             switch (menus[currentMenu].selectedOption)
             {
                 // *********************
                 // * main menu options *
                 // *********************
                 case "connectMenu":
-                    //switch to the connect menu
-                    currentMenu = (int)title.connect;
-                    menus[(int)title.connect].RefreshMenu(true);
-                    break;
+                    if (onSelect)
+                    {
+                        //switch to the connect menu
+                        currentMenu = (int)title.connect;
+                        menus[(int)title.connect].RefreshMenu(true);
+                    }
+                    else
+                    {
+                        menus[currentMenu].WriteLine("Go to the Finch connection menu...");
+                    }
+                    break;                    
 
                 case "talentShowMenu":
-                    currentMenu = (int)title.talentShow;
-                    menus[(int)title.talentShow].RefreshMenu(true);
+                    if (onSelect)
+                    {
+                        currentMenu = (int)title.talentShow;
+                        menus[(int)title.talentShow].RefreshMenu(true);
+                    }
+                    else
+                    {
+                        menus[currentMenu].WriteLine("Go to the Talent Show menu...");
+                        menus[currentMenu].WriteLine("\nObserve the finch participating in one of 3 exciting events!");
+                    }
                     break;
 
                 case "dataRecordMenu":
-                    currentMenu = (int)title.recorderMenu;
-                    menus[currentMenu].RefreshMenu(true);
+                    if (onSelect)
+                    {
+                        currentMenu = (int)title.recorderMenu;
+                        menus[currentMenu].RefreshMenu(true);
+                    }
+                    else
+                    {
+                        menus[currentMenu].WriteLine("Go to the Data Recorder menu...");
+                        menus[currentMenu].WriteLine("\nUse the finch to record temperatures over a set period of time!");
+                    }
                     break;
 
                 // **********************
                 // * Connect Finch Menu *
                 // **********************
                 case "connect":
-                    name = ConnectFinch();
-
-                    //verify the finch is connected
-                    finchConnected = name != "___FAILED_TO_CONNECT___";
-
-                    //if the finch connected successfully, return to the main menu
-                    if (finchConnected) 
+                    if (onSelect)
                     {
-                        currentMenu = (int)title.main;
-                        menus[currentMenu].RefreshMenu(true);
-                    }
+                        name = ConnectFinch();
 
+                        //verify the finch is connected
+                        finchConnected = name != "___FAILED_TO_CONNECT___";
+
+                        //if the finch connected successfully, return to the main menu
+                        if (finchConnected)
+                        {
+                            currentMenu = (int)title.main;
+                            menus[currentMenu].RefreshMenu(true);
+                        }
+                    }
+                    else
+                    {
+                        menus[currentMenu].WriteLine("Name your finch and attempt to connect to it...");
+                    }
                     break;
 
                 // ********************
                 // * Talent Show Menu *
                 // ********************
                 case "lightSound":
-                    LightAndSound();
+                    if (onSelect)
+                    {
+                        LightAndSound();
+                    }
+                    else
+                    {
+                        menus[currentMenu].WriteLine(name + " will light up blue and slowly go from blue to red if warmed up.");
+                        menus[currentMenu].WriteLine("if " + name + " warms up all the way it'll even play a little song!");
+                    }
                     break;
                 case "dance":
-                    DanceMonkeyDance();
+                    if (onSelect)
+                    {
+                        DanceMonkeyDance();
+                    }
+                    else
+                    {
+                        menus[currentMenu].WriteLine(name + " will drive in a small square for your amusement!");
+                    }
                     break;
                 case "mix":
-                    MixUp();
+                    if (onSelect)
+                    {
+                        MixUp();
+                    }
+                    else
+                    {
+                        menus[currentMenu].WriteLine(name + " will wiggle back and forth while playing notes and changing it's");
+                        menus[currentMenu].WriteLine("face color!");
+                    }
                     break;
 
                 // **********************
                 // * Data Recorder Menu *
                 // **********************
                 case "startRecorder":
-                    recorder.Start(myFinch, ref menus[currentMenu]);
+                    if (onSelect)
+                    {
+                        recorder.Start(myFinch, ref menus[currentMenu]);
+                    }
+                    else
+                    {
+                        menus[currentMenu].WriteLine("Start recording data based on the following settings...");
+                        menus[currentMenu].WriteLine("                         Data Points: " + recorder.NUMBER_OF_RECORDS.ToString());
+                        menus[currentMenu].WriteLine("                               Delay: " + recorder.TIME_BETWEEN_RECORDS.ToString());
+                        menus[currentMenu].WriteLine("                         Delay Units: " + recorder.TIME_UNIT);
+                        menus[currentMenu].WriteLine("\nPress enter to begin...");
+                    }
                     break;
 
                 case "configureRecorder":
-                    configureRecorder();
+                    if (onSelect)
+                    {
+                        configureRecorder();
+                    }
+                    else
+                    {
+                        menus[currentMenu].WriteLine("Press Enter to change the configuration.\n");
+                        menus[currentMenu].WriteLine("The current configuration is...");
+                        menus[currentMenu].WriteLine("                         Data Points: " + recorder.NUMBER_OF_RECORDS.ToString());
+                        menus[currentMenu].WriteLine("                               Delay: " + recorder.TIME_BETWEEN_RECORDS.ToString());
+                        menus[currentMenu].WriteLine("                         Delay Units: " + recorder.TIME_UNIT);
+                    }
                     break;
 
                 case "viewRecords":
-                    currentMenu = (int)title.recorderLogsMenu;
-                    menus[(int)title.recorderLogsMenu].RefreshMenu(true);
+                    if (onSelect)
+                    {
+                        currentMenu = (int)title.recorderLogsMenu;
+                        menus[(int)title.recorderLogsMenu].RefreshMenu(true);
+                    }
+                    else
+                    {
+                        menus[currentMenu].WriteLine("View previously recorded records...");
+                    }
                     break;
 
                 // ***************************
                 // * Data Recorder Logs Menu *
                 // ***************************
                 case "viewLast":
-                    viewData();
+                    if (onSelect)
+                    {
+                        viewData();
+                    }
+                    else
+                    {
+                        menus[currentMenu].WriteLine("If there is a data log available, you can view it here...");
+
+                        if (recorder.dataAccuired) 
+                        {
+                            menus[currentMenu].WriteLine("\n\nThere currently is a record available to view.");
+                        }
+                        else
+                        {
+                            menus[currentMenu].WriteLine("\n\nThere are no records currently avaliable to view.");
+                        }
+                    }
                     break;
 
                 case "saveDataLog":
-                    menus[currentMenu].Clear();
-                    menus[currentMenu].WriteLine("Feature coming soon...");
-                    System.Threading.Thread.Sleep(2000);
-                    menus[currentMenu].Clear();
+                    if (onSelect)
+                    {
+                        menus[currentMenu].Clear();
+                        menus[currentMenu].WriteLine("Feature coming soon...");
+                        System.Threading.Thread.Sleep(2000);
+                        menus[currentMenu].Clear();
+                    }
+                    else
+                    { 
+                        menus[currentMenu].WriteLine("NOT READY: Save a data log to file...");
+                    }
                     break;
 
                 case "loadDataLog":
-                    menus[currentMenu].Clear();
-                    menus[currentMenu].WriteLine("Feature coming soon...");
-                    System.Threading.Thread.Sleep(2000);
-                    menus[currentMenu].Clear();
+                    if (onSelect)
+                    {
+                        menus[currentMenu].Clear();
+                        menus[currentMenu].WriteLine("Feature coming soon...");
+                        System.Threading.Thread.Sleep(2000);
+                        menus[currentMenu].Clear();
+                    }
+                    else
+                    {
+                        menus[currentMenu].WriteLine("\n\nNOT READY: Load a data log and display it...");
+                    }
                     break;
 
                 case "returnDataRecord":
-                    currentMenu = (int)title.recorderMenu;
-                    menus[currentMenu].RefreshMenu(true);
+                    if (onSelect)
+                    {
+                        currentMenu = (int)title.recorderMenu;
+                        menus[currentMenu].RefreshMenu(true);
+                    }
+                    else
+                    {
+                        menus[currentMenu].WriteLine("Return to the Data Recorder Menu...");
+                    }
                     break;
 
                 // *******************************
                 // * Universal Selection Options *
                 // *******************************
                 case "returnMain":
-                    currentMenu = (int)title.main; 
-                    menus[(int)title.main].RefreshMenu(true);
+                    if (onSelect)
+                    {
+                        currentMenu = (int)title.main;
+                        menus[(int)title.main].RefreshMenu(true);
+                    }
+                    else
+                    {
+                        menus[currentMenu].WriteLine("Return to the Main Menu...");
+                    }
                     break;
 
                 case "quit":
-                    DisconnectFinch();
-                    running = false;
+                    if (onSelect)
+                    {
+                        DisconnectFinch();
+                        running = false;
+                    }
+                    else
+                    {
+                        menus[currentMenu].WriteLine("Disconect Finch and exit...");
+                    }
                     break;
 
                 default:
-                    DisplayMenuError();
+                    if (onSelect)
+                    {
+                        DisplayMenuError();
+                    }
                     break;
             }
         }
@@ -396,27 +559,31 @@ namespace M3FinchControl
             {
                 menus[currentMenu].Clear();
 
-                menus[currentMenu].WriteLine("The current configuration is...");
-                menus[currentMenu].WriteLine("                         Data Points: " + dataPoints.ToString());
-                menus[currentMenu].WriteLine("                               Delay: " + timeBetween.ToString());
-                menus[currentMenu].WriteLine("                         Delay Units: " + units);
-                menus[currentMenu].Write("\nWould you like to change the current configuration? ");
+                menus[currentMenu].WriteLine("Would you like to reset the current configuration to the default...");
+                menus[currentMenu].WriteLine("                         Data Points: 8");
+                menus[currentMenu].WriteLine("                               Delay: 10");
+                menus[currentMenu].WriteLine("                         Delay Units: seconds");
+                menus[currentMenu].Write("\nWould you like to reset the configuration, use a custom one, or keep it the same? ");
 
                 userInput = menus[currentMenu].ReadLine().ToLower();
 
-                if (userInput == "no" | userInput == "n")
+                if (userInput.Contains("custom") | userInput == "c")
+                {
+                    validating = false;
+                }
+                else if (userInput.Contains("reset") | userInput == "r")
+                {
+                    recorder = new DataRecorder();
+                }
+                else if (userInput.Contains("keep") | userInput == "k")
                 {
                     menus[currentMenu].Clear();
                     return;
                 }
-                else if (userInput == "yes" | userInput == "y")
-                {
-                    validating = false;
-                }
                 else
                 {
                     menus[currentMenu].Clear();
-                    menus[currentMenu].WriteLine("Please enter yes or no. Press any key to continue...");
+                    menus[currentMenu].WriteLine("Please enter a valid option (custom, reset, or keep). Press any key to continue...");
                     Console.ReadKey();
                 }
             }
