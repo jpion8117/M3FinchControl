@@ -3,13 +3,13 @@
 ###########################################################################################################################
 ###                                ###                         |                                                        ###
 ###   Super Finch Control 9000!    ###           Connect Finch |                                                        ###
-###      ^ Main Menu               ###             Talent Show |                                                        ###
-###                                ###           Data Recorder |                                                        ###
-###                                ###            Alarm System |                                                        ###
+###      ^ Main Menu               ###         Configure Alarm |                                                        ###
 ###                                ###                         |                                                        ###
+###                                ###        Start Monitoring |                                                        ###
+###                                ###          End Monitoring |                                                        ###
 ###               *                ###                         |                                                        ###
 ###             *   *              ###                         |                                                        ###
-###           *       *            ###                    Quit |                                                        ###
+###           *       *            ###                  Return |                                                        ###
 ###         *   *   *   *          ###                         |                                                        ###
 ###        *             *         ########################################################################################
 ###      *   *         *   *       ###                                                                                  ###
@@ -31,12 +31,12 @@
 	output={39, 13, 118, 20}
 	options={
 		connectMenu,
-		talentShowMenu,
-		dataRecordMenu,
-		alarmSystemMenu,
+		configureAlarm,
+		__NULL_LINE__,
+		startAlarm,
+		endAlarm,
 		__NULL_LINE__,
 		__NULL_LINE__,
-		__NULL_LINE__,
-		quit
+		returnMain
 	}
 </info>

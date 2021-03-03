@@ -12,15 +12,15 @@
 ###         | View Last Record     ###                                                                                  ###
 ###         | Save To Log          ###                                                                                  ###
 ###         | Load From Log        ###                                                                                  ###
+###         |                      ###                                                                                  ###
+###         |                      ###                                                                                  ###
+###         |                      ###                                                                                  ###
+###         |                      ###                                                                                  ###
+###         |                      ###                                                                                  ###
+###         |                      ###                                                                                  ###
+###         |                      ###                                                                                  ###
+###         |                      ###                                                                                  ###
 ###         | Return               ###                                                                                  ###
-###         |                      ###                                                                                  ###
-###         |                      ###                                                                                  ###
-###         |                      ###                                                                                  ###
-###         |                      ###                                                                                  ###
-###         |                      ###                                                                                  ###
-###         |                      ###                                                                                  ###
-###         |                      ###                                                                                  ###
-###         |                      ###                                                                                  ###
 ###         |                      ###                                                                                  ###
 ######################################                                                                                  ###
 ###                                ###                                                                                  ###
@@ -53,13 +53,20 @@
 <info>
 	selectorCol={9}
 	firstLine={10}
-	lastLine={13}
 	selectionIndicator={>>}
 	output={39, 2, 118, 46}
 	options={
 		viewLast,
 		saveDataLog,
 		loadDataLog,
+		__NULL_LINE__,
+		__NULL_LINE__,
+		__NULL_LINE__,
+		__NULL_LINE__,
+		__NULL_LINE__,
+		__NULL_LINE__,
+		__NULL_LINE__,
+		__NULL_LINE__,
 		returnDataRecord
 	}
 </info>

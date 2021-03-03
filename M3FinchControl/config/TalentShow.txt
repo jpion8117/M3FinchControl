@@ -6,10 +6,10 @@
 ###      ^ Main Menu               ###         Lights & Sounds |                                                        ###
 ###       ^ Talent Show Menu       ###                   Dance |                                                        ###
 ###                                ###             Mixin It Up |                                                        ###
-###                                ###                  Return |                                                        ###
+###                                ###                         |                                                        ###
 ###               *                ###                         |                                                        ###
 ###             *   *              ###                         |                                                        ###
-###           *       *            ###                         |                                                        ###
+###           *       *            ###                  Return |                                                        ###
 ###         *   *   *   *          ###                         |                                                        ###
 ###        *             *         ########################################################################################
 ###      *   *         *   *       ###                                                                                  ###
@@ -27,7 +27,6 @@
 <info>
 	selectorCol={65}
 	firstLine={3}
-	lastLine={7}
 	selectionIndicator={<--Selection}
 	output={39, 13, 118, 20}
 	options={
@@ -35,6 +34,9 @@
 		lightSound,
 		dance,
 		mix,
+		__NULL_LINE__,
+		__NULL_LINE__,
+		__NULL_LINE__,
 		returnMain
 	}
 </info>

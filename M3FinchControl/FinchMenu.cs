@@ -145,13 +145,6 @@ namespace M3FinchControl
             {
                 int.TryParse(data[0], out properties.firstLine);
             }
-            if (SearchInfoTag(info, "lastLine", out data)[0] != "FAILED_TO_LOCATE")
-            {
-                int.TryParse(data[0], out properties.lastLine);
-
-                //initilize the option IDs
-                optionIDs = new string[properties.lastLine - properties.firstLine + 1];
-            }
             if (SearchInfoTag(info, "selectionIndicator", out data)[0] != "FAILED_TO_LOCATE")
             {
                 selectionIndicator = data[0];
@@ -177,18 +170,11 @@ namespace M3FinchControl
             }
             if(SearchInfoTag(info, "options", out data)[0] != "FAILED_TO_LOCATE")
             {
-                //assign option ID's 
-                if (data.Length == optionIDs.Length)
-                {
-                    optionIDs = data;
-                }
-                else 
-                {
-                    for (int i = 0; i < data.Length & i < optionIDs.Length; ++i)
-                    {
-                        optionIDs[i] = data[i];
-                    }
-                }
+                //assign the option IDs
+                optionIDs = data;
+
+                //configure last option based on where the number of options availiable 
+                properties.lastLine = properties.firstLine + optionIDs.Length - 1;
             }
         }
         #endregion
@@ -479,6 +465,16 @@ namespace M3FinchControl
                         //set hover indcator to true and clear output
                         Clear();
                         onHoverUpdate = true;
+
+                        //update selected option
+                        selectedOption = optionIDs[properties.currentOption];
+
+                        //if selected option is blank, skip it
+                        while (selectedOption == "__NULL_LINE__")
+                        {
+                            properties.currentOption--;
+                            selectedOption = optionIDs[properties.currentOption];
+                        }
                     }
                 }
                 else if (key.Key == ConsoleKey.DownArrow)
@@ -500,6 +496,16 @@ namespace M3FinchControl
                         //set hover indcator to true and clear output
                         Clear();
                         onHoverUpdate = true;
+
+                        //update selected option
+                        selectedOption = optionIDs[properties.currentOption];
+
+                        //if selected option is blank, skip it
+                        while (selectedOption == "__NULL_LINE__")
+                        {
+                            properties.currentOption++;
+                            selectedOption = optionIDs[properties.currentOption];
+                        }
                     }
                 }
                 else if (key.Key == ConsoleKey.Enter)
@@ -536,9 +542,6 @@ namespace M3FinchControl
 
                     }
                 }
-
-                //update selected option
-                selectedOption = optionIDs[properties.currentOption];
             }
         }
         #endregion

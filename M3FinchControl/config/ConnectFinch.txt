@@ -3,13 +3,13 @@
 ###########################################################################################################################
 ###                                ###                         |                                                        ###
 ###   Super Finch Control 9000!    ###      Attempt Connection |                                                        ###
-###      ^ Main Menu               ###                  Return |                                                        ###
+###      ^ Main Menu               ###                         |                                                        ###
 ###       ^ Connect Finch Menu     ###                         |                                                        ###
 ###                                ###                         |                                                        ###
 ###                                ###                         |                                                        ###
 ###               *                ###                         |                                                        ###
 ###             *   *              ###                         |                                                        ###
-###           *       *            ###                         |                                                        ###
+###           *       *            ###                  Return |                                                        ###
 ###         *   *   *   *          ###                         |                                                        ###
 ###        *             *         ########################################################################################
 ###      *   *         *   *       ###                                                                                  ###
@@ -27,11 +27,16 @@
 <info>
 	selectorCol={65}
 	firstLine={3}
-	lastLine={4}
 	selectionIndicator={<--Selection}
 	output={39, 13, 118, 20}
 	options={
 		connect,
+		__NULL_LINE__,
+		__NULL_LINE__,
+		__NULL_LINE__,
+		__NULL_LINE__,
+		__NULL_LINE__,
+		__NULL_LINE__,
 		returnMain
 	}
 </info>
