@@ -36,7 +36,8 @@ namespace M3FinchControl
             connect,
             talentShow,
             recorderMenu,
-            recorderLogsMenu
+            recorderLogsMenu,
+            alarmSystem
         }
         static void Main(string[] args)
         {
@@ -61,6 +62,7 @@ namespace M3FinchControl
             menus[(int)title.talentShow].LoadTemplate("config\\TalentShow.txt");
             menus[(int)title.recorderMenu].LoadTemplate("config\\DataRecorder.txt");
             menus[(int)title.recorderLogsMenu].LoadTemplate("config\\ViewDataRecords.txt");
+            menus[(int)title.alarmSystem].LoadTemplate("config\\AlarmSystem.txt");
 
             //refresh main menu
             menus[(int)title.main].RefreshMenu(true);
@@ -346,6 +348,20 @@ namespace M3FinchControl
                     else
                     {
                         menus[currentMenu].WriteLine("Return to the Data Recorder Menu...");
+                    }
+                    break;
+                // **********************
+                // * Data Recorder Menu *
+                // **********************
+                case "alarmSystemMenu":
+                    if(onSelect)
+                    {
+                        currentMenu = (int)title.alarmSystem;
+                        menus[currentMenu].RefreshMenu(true);
+                    }
+                    else
+                    {
+                        menus[currentMenu].WriteLine("Set alerts to monitor various systems...");
                     }
                     break;
 

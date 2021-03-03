@@ -50,6 +50,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DataRecorder.cs" />
+    <Compile Include="FinchAlarm.cs" />
     <Compile Include="FinchMenu.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -61,6 +62,9 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="config\DataRecorder.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="config\AlarmSystem.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="config\ViewDataRecords.txt">

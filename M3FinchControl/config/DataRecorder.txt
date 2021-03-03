@@ -1,11 +1,11 @@
 <menu>
 ###########################################################################################################################
 ###########################################################################################################################
+###                                ###           Connect Finch |                                                        ###
+###   Super Finch Control 9000!    ###  Recorder Configuration |                                                        ###
+###      ^ Main Menu               ###         Start Recording |                                                        ###
+###       ^ Data Recorder Menu     ###            View Records |                                                        ###
 ###                                ###                         |                                                        ###
-###   Super Finch Control 9000!    ###           Connect Finch |                                                        ###
-###      ^ Main Menu               ###  Recorder Configuration |                                                        ###
-###       ^ Data Recorder Menu     ###         Start Recording |                                                        ###
-###                                ###            View Records |                                                        ###
 ###                                ###                  Return |                                                        ###
 ###               *                ########################################################################################
 ###             *   *              ###                                                                                  ###
@@ -26,8 +26,7 @@
 
 <info>
 	selectorCol={65}
-	firstLine={3}
-	lastLine={7}
+	firstLine={2}
 	selectionIndicator={<--Selection}
 	output={39, 9, 118, 20}
 	options={
@@ -35,6 +34,7 @@
 		configureRecorder,
 		startRecorder,
 		viewRecords,
+		__NULL_LINE__,
 		returnMain
 	}
 </info>
