@@ -22,13 +22,21 @@ namespace M3FinchControl
         // **********************************
         // * Global Program Class Variables *
         // **********************************
-        static Menu[] menus = new Menu[Enum.GetNames(typeof(title)).Length];
-        static Finch myFinch = new Finch();
+        static public Menu[] menus
+        {
+            get;
+            private set;
+        }
+        static public Finch myFinch
+        {
+            get;
+            private set;
+        }
         static DataRecorder recorder = new DataRecorder();
         static string name = "";
         static bool finchConnected = false;
         static bool running = true;
-        static int currentMenu = 0;
+        static public int currentMenu;
 
         enum title
         {
@@ -41,6 +49,11 @@ namespace M3FinchControl
         }
         static void Main(string[] args)
         {
+            //initilaize variables
+            myFinch = new Finch();
+            currentMenu = 0;
+            menus = new Menu[Enum.GetNames(typeof(title)).Length];
+
             //create the menu instances
             for (int menuNum = 0; menuNum < Enum.GetNames(typeof(title)).Length; ++menuNum)
             {
@@ -100,13 +113,47 @@ namespace M3FinchControl
             myFinch.wait(waitAfter);
         }
 
-        static int CelsiusToFahrenheit(double tempC)
+        static public int CelsiusToFahrenheit(double tempC)
         {
             return (int)(tempC * 1.8 + 32);
         }
         #endregion
 
         #region Menu Navigation Methods
+        static public string ValidateInput(string prompt, string[] validInput, string error = "Invalid Input: Press any key to continue...")
+        {
+            bool validing = true;
+            string userInput = "";
+            int index = 0;
+
+            while (validing)
+            {
+                //display prompt
+                menus[currentMenu].Clear();
+                menus[currentMenu].Write(prompt);
+                userInput = menus[currentMenu].ReadLine();
+
+                //check if input matches a valid input
+                for (index = 0; index < validInput.Length; ++index)
+                {
+                    if (validInput[index].ToLower() == userInput.ToLower())
+                    {
+                        validing = false;
+                        break;
+                    }
+                }
+
+                //if a valid input is not found display an error message.
+                if (validing)
+                {
+                    menus[currentMenu].WriteLine("\n" + error);
+                    Console.ReadKey();
+                }
+            }
+
+            //return the valid input that was identified
+            return validInput[index];
+        }
         static void DisplayMenuError(string error = "Invalid selection, Press any key to continue...")
         {
             //clear the menu IO
@@ -350,18 +397,37 @@ namespace M3FinchControl
                         menus[currentMenu].WriteLine("Return to the Data Recorder Menu...");
                     }
                     break;
-                // **********************
-                // * Data Recorder Menu *
-                // **********************
+                // *********************
+                // * Alarm System Menu *
+                // *********************
                 case "alarmSystemMenu":
                     if(onSelect)
                     {
+                        //load the menu
                         currentMenu = (int)title.alarmSystem;
                         menus[currentMenu].RefreshMenu(true);
+
+                        //configure default parameters for the module
+                        FinchAlarm.ConfigureAlarm(new int[] { 50, 17, 60, 18, }, new int[] { 80, 88, 83, 81, 99 }, FinchAlarm.Sensor.temperatureF);
                     }
                     else
                     {
                         menus[currentMenu].WriteLine("Set alerts to monitor various systems...");
+                    }
+                    break;
+                case "configureAlarm":
+                    if(onSelect)
+                    {
+                        FinchAlarm.GetConfigFromUser();
+                    }
+                    else
+                    {
+                        menus[currentMenu].WriteLine("Configure the parameters of the alarm system.");
+                        menus[currentMenu].WriteLine("\nCurrent configuration...");
+                        menus[currentMenu].WriteLine("                       Time to monitor: " + FinchAlarm.timeToMonitor + FinchAlarm.unitOfTimeStr);
+                        menus[currentMenu].WriteLine("                     Sensor to monitor: " + FinchAlarm.dataSensorStr);
+                        menus[currentMenu].WriteLine("\nPress enter to modifiy the current configuration.");
+
                     }
                     break;
 

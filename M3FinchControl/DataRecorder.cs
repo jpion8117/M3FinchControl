@@ -10,7 +10,8 @@ namespace M3FinchControl
     {
         milliseconds = 1,
         seconds = 1000,
-        minutes = 60000
+        minutes = 60000,
+        hours = 3600000
     }
     class DataRecorder
     {

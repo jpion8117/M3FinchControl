@@ -168,7 +168,7 @@ namespace M3FinchControl
                     properties.maxOutputChars = properties.maxCharPerLine * formatedOutput.Length;
                 }
             }
-            if(SearchInfoTag(info, "options", out data)[0] != "FAILED_TO_LOCATE")
+            if (SearchInfoTag(info, "options", out data)[0] != "FAILED_TO_LOCATE")
             {
                 //assign the option IDs
                 optionIDs = data;
@@ -391,7 +391,7 @@ namespace M3FinchControl
             // *************
             ConsoleKeyInfo key;
             char keyChar;
-            
+
             //if the calling method requested a full reload, reload menu from template
             if (fullReload)
             {
@@ -563,17 +563,17 @@ namespace M3FinchControl
 
             int curChar = 0;
             int charsParsed = 0;
-            
+
             //find the max output size
             int maxOutputLines = properties.outputBottom - properties.outputTop + 1;
 
             //clear the formatedOutput array
-            for (int lineNum = 0; lineNum < formatedOutput.Length; ++lineNum) 
+            for (int lineNum = 0; lineNum < formatedOutput.Length; ++lineNum)
             {
                 formatedOutput[lineNum] = line;
             }
             //begin output string format loop
-            for (int lineNum = 0; lineNum < formatedOutput.Length; ++lineNum) 
+            for (int lineNum = 0; lineNum < formatedOutput.Length; ++lineNum)
             {
                 //reset the line
                 line = "";
@@ -651,7 +651,7 @@ namespace M3FinchControl
 
             //reset input string
             inputString = "";
-            
+
             //clear output console area
             Console.SetCursorPosition(properties.outputLeft, properties.outputTop);
 
