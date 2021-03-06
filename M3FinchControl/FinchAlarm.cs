@@ -12,6 +12,8 @@ namespace M3FinchControl
         {
             lowAlarm = new List<Alert>();
             highAlarm = new List<Alert>();
+            alarmPhaseOne = true;
+            finalAlarmCycle = 0;
         }
 
         /// <summary>
@@ -80,6 +82,30 @@ namespace M3FinchControl
             {
                 return trigger < alert.triggerValue;
             }
+            public static bool operator ==(Alert alert, int trigger)
+            {
+                return trigger == alert.triggerValue;
+            }
+            public static bool operator !=(Alert alert, int trigger)
+            {
+                return trigger != alert.triggerValue;
+            }
+            public static bool operator >=(Alert alert, int trigger)
+            {
+                return trigger >= alert.triggerValue;
+            }
+            public static bool operator <=(Alert alert, int trigger)
+            {
+                return trigger <= alert.triggerValue;
+            }
+            public static bool operator >(Alert alert, int trigger)
+            {
+                return trigger > alert.triggerValue;
+            }
+            public static bool operator <(Alert alert, int trigger)
+            {
+                return trigger < alert.triggerValue;
+            }
             public static bool operator >=(Alert trigger, Alert alert)
             {
                 return trigger.triggerValue >= alert.triggerValue;
@@ -116,9 +142,6 @@ namespace M3FinchControl
             unitOfTime = unit;
             timeToMonitor = monitoringTime;
 
-            lowAlarm.Add(new Alert(DEFAULT_MESSAGE_LOW, lowThreshold));
-            highAlarm.Add(new Alert(DEFAULT_MESSAGE_HIGH, lowThreshold));
-
             //verify correct thresholds
             if (!VerifyAlertValidity())
             {
@@ -127,6 +150,9 @@ namespace M3FinchControl
 
             //set the info strings
             SetInfoStrings();
+
+            //set the final alarm cycle
+            finalAlarmCycle = (ulong)(timeToMonitor * (int)unitOfTime);
         }
         /// <summary>
         /// Configure the alarm with the default alarm messages and multiple low and high thresholds. All low thresholds must be less 
@@ -164,6 +190,8 @@ namespace M3FinchControl
             //set the info strings
             SetInfoStrings();
 
+            //set the final alarm cycle
+            finalAlarmCycle = (ulong)(timeToMonitor * (int)unitOfTime);
         }
         /// <summary>
         /// Configure the alarm with the default alarm messages and only one low and high threshold
@@ -199,6 +227,9 @@ namespace M3FinchControl
 
             //set the info strings
             SetInfoStrings();
+
+            //set the final alarm cycle
+            finalAlarmCycle = (ulong)(timeToMonitor * (int)unitOfTime);
         }
 
         static public void GetConfigFromUser()
@@ -207,9 +238,14 @@ namespace M3FinchControl
             // * Variables *
             // *************
             string validatedInput = "";
+            string option = "";
             string prompt = "";
             string lowThresholdStr = "";
             string highThresholdStr = "";
+            int validatedInt = 0;
+            bool makingSelection = true;
+            int min = 1;
+            int max = 0;
 
             //get thresholds in string form.
             for (int index = 0; index < lowAlarm.Count; ++index)
@@ -245,12 +281,406 @@ namespace M3FinchControl
                 "Invalid Option: Please enter yes or no. Press any key to continue...");
             if (validatedInput == "yes" | validatedInput == "y")
             {
+                //ask user what sensor they would like to use
+                while (makingSelection)
+                {
+                    prompt = "What sensor would you like to monitor?\n" +
+                             "     * Light\n" +
+                             "     * Right Light\n" +
+                             "     * Left Light\n" +
+                             "     * Temperature (\u00b0F) (type: \"Temperature F)\"\n" +
+                             "     * Temperature (\u00b0C) (type: \"Temperature C)\"\n" +
+                             "\nChoice: ";
+                    option = Program.ValidateInput(prompt,
+                        new string[] { "Light", "Right Light", "Left Light", "Temperature F", "Temperature C" });
 
+                    //confirm selection
+                    prompt = "You selected " + option.ToLower() + " is this correct? ";
+                    validatedInput = Program.ValidateInput(prompt, new string[] { "yes", "y", "no", "n" },
+                        "Invalid Option: Please enter yes or no. Press any key to continue...");
+                    if (validatedInput == "yes" | validatedInput == "y")
+                    {
+                        makingSelection = false;
+                    }
+                }
+
+                //save configuration
+                switch (option)
+                {
+                    case "Light":
+                        dataSensor = Sensor.light;
+                        break;
+                    case "Right Light":
+                        dataSensor = Sensor.lightRight;
+                        break;
+                    case "Left Light":
+                        dataSensor = Sensor.lightLeft;
+                        break;
+                    case "Temperature F":
+                        dataSensor = Sensor.temperatureF;
+                        break;
+                    case "Temperature C":
+                        dataSensor = Sensor.temperatureC;
+                        break;
+                }
+
+                //ask user what unit of time they want to use
+                makingSelection = true;
+                while (makingSelection)
+                {
+                    //ask user what sensor they would like to use
+                    prompt = "What unit of time do you want to use to monitor for?\n" +
+                             "     * Seconds\n" +
+                             "     * Minutes\n" +
+                             "     * Hours\n" +
+                             "\nChoice: ";
+                    option = Program.ValidateInput(prompt,
+                        new string[] { "Seconds", "Minutes", "Hours" });
+
+                    //confirm selection
+                    prompt = "You selected " + option.ToLower() + " is this correct? ";
+                    validatedInput = Program.ValidateInput(prompt, new string[] { "yes", "y", "no", "n" },
+                        "Invalid Option: Please enter yes or no. Press any key to continue...");
+                    if (validatedInput == "yes" | validatedInput == "y")
+                    {
+                        makingSelection = false;
+                    }
+                }
+
+                //save configuration
+                switch (option.ToLower())
+                {
+                    case "seconds":
+                        unitOfTime = timeUnits.seconds;
+                        min = 60;
+                        max = 1200;
+                        break;
+                    case "minutes":
+                        unitOfTime = timeUnits.minutes;
+                        max = 120;
+                        break;
+                    case "hours":
+                        max = 3;
+                        unitOfTime = timeUnits.hours;
+                        break;
+                }
+
+                //ask user to how long they want to monitor the sensor
+                SetInfoStrings();
+                prompt = "How long in" + unitOfTimeStr.ToLower() + "would you like to monitor for?\n" +
+                         "    Test time (" + min.ToString() + "-" + max.ToString() + "): ";
+                validatedInt = Program.ValidateInput(prompt, max, true, min, true);
+
+                //save configuration
+                timeToMonitor = validatedInt;
+
+                //allow the user to set low thresholds
+                lowAlarm = SetAlertThresholds(lowAlarm, "lower");
+
+                //allow the user to set high thresholds
+                highAlarm = SetAlertThresholds(highAlarm, "higher");
             }
             else if (validatedInput == "no" | validatedInput == "n")
             {
-                Program.menus[Program.currentMenu].RefreshMenu(true);
+                Program.menus[Program.currentMenu].Clear();
             }
+
+            //set the final alarm cycle
+            finalAlarmCycle = (ulong)(timeToMonitor * (int)unitOfTime);
+        }
+
+        static List<Alert> SetAlertThresholds(List<Alert> thresholdList, string currentRange)
+        {
+            bool makingSelection = true;
+            string prompt = "";
+            string validatedInput = "";
+            string actionMessage = "";
+            int triggerValue = 0;
+
+            while (makingSelection)
+            {
+                //reset action message
+                actionMessage = "";
+
+                //variables to store the min/max settings
+                int min = 0;
+                int max = 0;
+                string sensorType = "";
+
+                //get the sensor's setting range
+                if (dataSensor >= Sensor.light & dataSensor < Sensor.temperatureF)
+                {
+                    //set the min/max
+                    min = 0;
+                    max = 255;
+                    sensorType = "\"light\"";
+                }
+                else if (dataSensor == Sensor.temperatureF)
+                {
+                    min = 20;
+                    max = 110;
+                    sensorType = "\"temperature \u00b0F\"";
+                }
+                else
+                {
+                    min = -10;
+                    max = 45;
+                    sensorType = "\"temperature \u00b0C\"";
+                }
+
+                // ******************************
+                // * Begin prompt configuration *
+                // ******************************
+
+                //let the user know what sensor is being monitored
+                prompt = "";
+                prompt += "You are currently configuring the " + currentRange.ToLower() + " thresholds for the " + dataSensorStr.ToLower() + " sensor\n";
+                prompt += "    - sensors of the type " + sensorType + " may have values between " +
+                    min.ToString() + " and " + max.ToString() + "\n";
+
+                //list the threshold alarms currently in use
+                prompt += "\n\n";
+                prompt += " Threshold | Sound | Light | Message \n";
+                prompt += "===========|=======|=======|==============================================================\n";
+
+                if (thresholdList.Count == 0)
+                {
+                    prompt += "           ***  There are currently no " + currentRange.ToLower() + " threshold alerts set  ***";
+                }
+                else
+                {
+                    for (int index = 0; index < thresholdList.Count; index++)
+                    {
+                        //local var
+                        bool soundAlert = false;
+                        bool lightAlert = false;
+                        bool messageAlert = false;
+                        string message = "";
+
+                        //search for tags
+                        soundAlert = CheckTag(thresholdList[index].actionMessage, SET_BUZZ_TAG_1) | CheckTag(thresholdList[index].actionMessage, SET_BUZZ_TAG_2);
+                        lightAlert = CheckTag(thresholdList[index].actionMessage, SET_LED_TAG_1) | CheckTag(thresholdList[index].actionMessage, SET_LED_TAG_2);
+                        messageAlert = ExtractTag(thresholdList[index].actionMessage, OUTPUT_MESSAGE_TAG, out message);
+
+                        //        " Threshold | Sound | Light | Message ";
+                        //        "===========|=======|=======|==============================================================";
+
+                        //add the alert threshold to the prompt
+                        prompt += "       " + thresholdList[index].triggerValue.ToString("D3") + " |";
+
+                        //add yes or no for sound alert
+                        if (soundAlert)
+                        {
+                            prompt += "  Yes  |";
+                        }
+                        else
+                        {
+                            prompt += "  No   |";
+                        }
+
+                        //add yes or no for light alert
+                        if (lightAlert)
+                        {
+                            prompt += "  Yes  |";
+                        }
+                        else
+                        {
+                            prompt += "  No   |";
+                        }
+
+                        //if message is longer than the table length, shorten it
+                        if (messageAlert)
+                        {
+                            if (message.Length > 57)
+                            {
+                                message = message.Remove(64);
+                                message += "...";
+                            }
+
+                            //add the message to this line of the prompt
+                            prompt += ' ' + message + '\n';
+                        }
+                        else
+                        {
+                            prompt += " -- output message disabled --\n";
+                        }
+                    }
+                }
+
+                prompt += "\n\nWould you like to add a new " + currentRange.ToLower() + " threshold alarm? ";
+
+                // ****************************
+                // * End prompt configuration *
+                // ****************************
+
+                //ask the user if they want to add another threshold
+                validatedInput = Program.ValidateInput(prompt, new string[] { "yes", "y", "no", "n" },
+                    "INVALID INPUT: Please enter yes or no.\n\nPress any key to continue...");
+
+                //act on user response
+                if (validatedInput == "yes" | validatedInput == "y")
+                {
+                    //localized variables
+                    bool validAlert = false;
+                    int validatedInt = 0;
+
+                    while (!validAlert)
+                    {
+                        //ask user when the alert should be triggered
+                        prompt = "Sensors of type " + sensorType.ToLower() + " can be set to trigger between " + min.ToString() + " and " + max.ToString() + ".\n" +
+                                 "     At what threshold would you like to trigger this alert? ";
+
+                        triggerValue = Program.ValidateInput(prompt, max, true, min, true);
+
+                        //ask the user if they want to use sound alerts
+                        prompt = "Would you like to include a sound feature with this alert? ";
+                        validatedInput = Program.ValidateInput(prompt, new string[] { "yes", "y", "no", "n" },
+                            "INVALID INPUT: Please enter yes or no.\n\nPress any key to continue...");
+
+                        if (validatedInput == "yes" | validatedInput == "y")
+                        {
+                            //set the min/max setting for a sound based alert
+                            min = 1000;
+                            max = 20000;
+
+                            //set first buzzer frequency
+                            while (!validAlert)
+                            {
+                                prompt = "What would you like to use as the first frequency? (" + min.ToString() + "-" + max.ToString() + " or 0 for off): ";
+                                validatedInt = Program.ValidateInput(prompt, max, true);
+
+                                if(validatedInt == 0 | validatedInt >= min)
+                                {
+                                    actionMessage += SET_BUZZ_TAG_1 + validatedInt.ToString() + ";";
+                                    break;
+                                }
+                            }
+
+                            //set second buzzer frequency
+                            while (!validAlert)
+                            {
+                                prompt = "What would you like to use as the second frequency? (" + min.ToString() + "-" + max.ToString() + " or 0 for off): ";
+                                validatedInt = Program.ValidateInput(prompt, max, true);
+
+                                if (validatedInt == 0 | validatedInt >= min)
+                                {
+                                    actionMessage += SET_BUZZ_TAG_2 + validatedInt.ToString() + ";";
+                                    break;
+                                }
+                            }
+
+                            validAlert = true;
+                        }
+
+                        //ask the user if they want to use light alerts
+                        prompt = "Would you like to include a light feature with this alert? ";
+                        validatedInput = Program.ValidateInput(prompt, new string[] { "yes", "y", "no", "n" },
+                            "INVALID INPUT: Please enter yes or no.\n\nPress any key to continue...");
+                        if (validatedInput == "yes" | validatedInput == "y")
+                        {
+                            //reset localized variables
+                            validAlert = false;
+                            validatedInt = 0;
+
+                            //set the min/max setting for a sound based alert
+                            min = 0;
+                            max = 255;
+
+                            int[] rgb = { 0, 0, 0 };
+                            string[] rgbDescriptor = { "red", "blue", "green" };
+
+                            while (!validAlert)
+                            {
+                                //set the first light color
+                                for (int index = 0; index < rgb.Length; ++index)
+                                {
+                                    prompt = "Please enter a value for the color " + rgbDescriptor[index] + " between " + min.ToString() + "-" + max.ToString() + ": ";
+                                    rgb[index] = Program.ValidateInput(prompt, max, true, min, true);
+                                }
+
+                                //confirm color selection
+                                prompt = "Here is the RGB based color you have requested\n" +
+                                         "    Red: " + rgb[0].ToString() + "\n" +
+                                         "   Blue: " + rgb[1].ToString() + "\n" +
+                                         "  Green: " + rgb[2].ToString() + "\n" +
+                                         "\nIs this correct? ";
+
+                                validatedInput = Program.ValidateInput(prompt, new string[] { "yes", "y", "no", "n" },
+                                    "INVALID INPUT: Please enter yes or no.\n\nPress any key to continue...");
+
+                                //add validated alert to the actionMessage and break loop
+                                if (validatedInput == "yes" | validatedInput == "y")
+                                {
+                                    actionMessage += SET_LED_TAG_1 + rgb[0].ToString() + "," + rgb[1].ToString() + "," + rgb[2].ToString() + ";";
+                                    validAlert = true;
+                                }
+                            }
+
+                            //reset validAlert
+                            validAlert = false;
+                            while (!validAlert)
+                            {
+                                //set the second light color
+                                for (int index = 0; index < rgb.Length; ++index)
+                                {
+                                    prompt = "Please enter a value for the color " + rgbDescriptor[index] + " between " + min.ToString() + "-" + max.ToString() + ": ";
+                                    rgb[index] = Program.ValidateInput(prompt, max, true, min, true);
+                                }
+
+                                //confirm color selection
+                                prompt = "Here is the RGB based color you have requested\n" +
+                                         "    Red: " + rgb[0].ToString() + "\n" +
+                                         "   Blue: " + rgb[1].ToString() + "\n" +
+                                         "  Green: " + rgb[2].ToString() + "\n" +
+                                         "\nIs this correct? ";
+
+                                validatedInput = Program.ValidateInput(prompt, new string[] { "yes", "y", "no", "n" },
+                                    "INVALID INPUT: Please enter yes or no.\n\nPress any key to continue...");
+
+                                //add validated alert to the actionMessage and break loop
+                                if (validatedInput == "yes" | validatedInput == "y")
+                                {
+                                    actionMessage += SET_LED_TAG_2 + rgb[0].ToString() + "," + rgb[1].ToString() + "," + rgb[2].ToString() + ";";
+                                    validAlert = true;
+                                }
+                            }
+                        }
+
+                        //ask the user if they want to use message alerts
+                        prompt = "Would you like to include a message feature with this alert? ";
+                        validatedInput = Program.ValidateInput(prompt, new string[] { "yes", "y", "no", "n" },
+                            "INVALID INPUT: Please enter yes or no.\n\nPress any key to continue...");
+                        if (validatedInput == "yes" | validatedInput == "y")
+                        {
+                            prompt = "Please enter the message you would like to display when this threshold is crossed...\n\nMessage: ";
+                            actionMessage += OUTPUT_MESSAGE_TAG + Program.ValidateInput(prompt, new char[] { ',', '#', ';' });
+                        }
+
+                        //if no alerts were set the 
+                        if (actionMessage != "")
+                        {
+                            //add the validated alert
+                            thresholdList.Add(new Alert(actionMessage, triggerValue));
+
+                            //break loop
+                            validAlert = true;
+                        }
+                        else
+                        {
+                            Program.menus[Program.currentMenu].Clear();
+                            Program.menus[Program.currentMenu].WriteLine("No alert options selected! Press any key to continue...");
+                            Console.ReadKey();
+                        }
+                    }
+                }
+                else
+                {
+                    makingSelection = false;
+                }
+            }
+
+            //returns the fully built threshold list
+            return thresholdList;
         }
 
         /// <summary>
@@ -264,7 +694,11 @@ namespace M3FinchControl
             highAlarm.Sort();
 
             //check the first element of the high range against the last element of the low range
-            if (lowAlarm.Last() >= highAlarm[0]) 
+            if (lowAlarm.Count == 0 | highAlarm.Count == 0) 
+            {
+                return true;
+            }
+            else if (lowAlarm.Last() >= highAlarm[0]) 
             {
                 return false;
             }
@@ -308,16 +742,15 @@ namespace M3FinchControl
             }
         }
 
-        static string processAlarmCycle()
+        static public bool ProcessAlarmCycle(ulong cycleNumber)
         {
             // *************
             // * Variables *
             // *************
-            string message = "__NO_ALERT__";
             int sensorData = 0;
 
             //determine which sensor is being monitored and poll it
-            switch(dataSensor)
+            switch (dataSensor)
             {
                 case Sensor.light:
                     sensorData = (int)Program.myFinch.getLightSensors().Average();
@@ -336,16 +769,333 @@ namespace M3FinchControl
                     break;
             }
 
-            //check low threshold
-            
-            //check high threshold
-            
-            //return message
-            return message;
-        }
-        
+            //flip phase every second
+            if ((cycleNumber % 5000) == 0) 
+            {
+                alarmPhaseOne = !alarmPhaseOne;
+            }
 
-       static public Sensor dataSensor
+            //reset finch
+            Program.myFinch.setLED(0, 255, 0);
+            Program.myFinch.noteOff();
+
+            //check low threshold
+            if (lowAlarm.Count != 0)
+            {
+                //sort the list
+                lowAlarm.Sort();
+
+                foreach (Alert currentCheck in lowAlarm)
+                {
+                    if (currentCheck < sensorData)
+                    {
+                        //process the alarm output
+                        ProcessAlarmMessage(currentCheck.actionMessage);
+                        break;
+                    }
+                }
+            }
+
+            //check high threshold
+            if (highAlarm.Count != 0)
+            {
+                //sort the list
+                highAlarm.Sort();
+
+                for (int index = 0; index < highAlarm.Count; ++index)
+                {
+                    if (highAlarm[index] > sensorData)
+                    {
+                        //process the alarm output
+                        ProcessAlarmMessage(highAlarm[index].actionMessage);
+                        break;
+                    }
+                }
+            }
+
+            //return message
+            return cycleNumber != finalAlarmCycle; 
+        }
+
+        /// <summary>
+        /// gives various feedback actions based on the input of an "actionMessage" from an alarm that has been triggered
+        /// </summary>
+        /// <param name="actionMessage">actionMessage of the currently triggered alarm</param>
+        static private void ProcessAlarmMessage(string actionMessage)
+        {
+            //create a list to store the actions
+            List<string> actions = new List<string>();
+
+            int actionStart = 0;
+
+            //separate different action tags
+            for (int index = 0; index < actionMessage.Length; ++index)
+            {
+                //look for the start char and note it's location
+                if(actionMessage[index] == '#')
+                {
+                    actionStart = index;
+                }
+                //look for the end char and add the action message to the actions array
+                else if (actionMessage[index] == ';')
+                {
+                    actions.Add(actionMessage.Substring(actionStart, index - actionStart + 1));
+                }
+            }
+
+            //run the actions
+            for (int index = 0; index < actions.Count; ++index)
+            {
+                //determines if alarm is in phase 1 or 2
+                if (alarmPhaseOne)
+                {
+                    if (actions[index].Contains(SET_LED_TAG_1))
+                    {
+                        // ************************
+                        // * extract the settings *
+                        // ************************
+
+                        //remove the tag
+                        actions[index] = actions[index].Remove(0, SET_LED_TAG_1.Length);
+
+                        //get the RGB values to set the finch
+                        int[] rgb = { 0, 0, 0 };
+                        int currentRGB = 0;
+                        string input = "";
+
+                        for (int rgbIndex = 0; rgbIndex < actions[index].Length; ++rgbIndex)
+                        {
+                            //look for the ',' or ';'
+                            if (actions[index][rgbIndex] == ',' | actions[index][rgbIndex] == ';')
+                            {
+                                if (int.TryParse(input, out rgb[currentRGB]))
+                                {
+                                    currentRGB++;
+                                    input = "";
+                                }
+                                else
+                                {
+                                    //throws an exception if the argument rgb[currentRGB] contains anything other than numbers
+                                    throw new ArgumentException("Invalid arguement in RGB string.");
+                                }
+                            }
+                            else
+                            {
+                                input += actions[index][rgbIndex];
+                            }
+                        }
+
+                        //set the light
+                        Program.myFinch.setLED(rgb[0], rgb[1], rgb[2]);
+                    }
+                    else if (actions[index].Contains(SET_BUZZ_TAG_1))
+                    {
+                        // ************************
+                        // * extract the settings *
+                        // ************************
+
+                        //remove the tag
+                        actions[index] = actions[index].Remove(0, SET_BUZZ_TAG_1.Length);
+                        
+                        //variables needed for the extraction
+                        int frequency = 0;
+                        string input = "";
+
+                        //extract the frequency setting
+                        for (int freqIndex = 0; freqIndex < actions[index].Length; ++freqIndex)
+                        {
+                            if(actions[index][freqIndex] == ';')
+                            {
+                                if (!int.TryParse(input, out frequency))
+                                {
+                                    //throws an exception if the argument input contains anything other than numbers
+                                    throw new ArgumentException("Invalid arguement in input string.");
+                                }
+
+                                break;
+                            }
+
+                            //add current char
+                            input += actions[index][freqIndex];
+                        }
+
+                        //set the finch buzzer
+                        if (frequency == 0)
+                        {
+                            Program.myFinch.noteOff();
+                        }
+                        else
+                        {
+                            Program.myFinch.noteOn(frequency);
+                        }
+                    }
+                    else if (actions[index].Contains(OUTPUT_MESSAGE_TAG))
+                    {
+                        // ***********************
+                        // * extract the message *
+                        // ***********************
+
+                        //remove the tag
+                        actions[index] = actions[index].Remove(0, OUTPUT_MESSAGE_TAG.Length);
+
+                        //output the message to the console
+                        Program.menus[Program.currentMenu].Clear();
+                        Program.menus[Program.currentMenu].WriteLine(actions[index]);
+                    }
+                }
+                else
+                {
+                    if (actions[index].Contains(SET_LED_TAG_2))
+                    {
+                        // ************************
+                        // * extract the settings *
+                        // ************************
+
+                        //remove the tag
+                        actions[index] = actions[index].Remove(0, SET_LED_TAG_1.Length);
+
+                        //get the RGB values to set the finch
+                        int[] rgb = { 0, 0, 0 };
+                        int currentRGB = 0;
+                        string input = "";
+
+                        for (int rgbIndex = 0; rgbIndex < actions[index].Length; ++rgbIndex)
+                        {
+                            //look for the ',' or ';'
+                            if (actions[index][rgbIndex] == ',' | actions[index][rgbIndex] == ';')
+                            {
+                                if (int.TryParse(input, out rgb[currentRGB]))
+                                {
+                                    currentRGB++;
+                                    input = "";
+                                }
+                                else
+                                {
+                                    //throws an exception if the argument rgb[currentRGB] contains anything other than numbers
+                                    throw new ArgumentException("Invalid arguement in RGB string.");
+                                }
+                            }
+                            else
+                            {
+                                input += actions[index][rgbIndex];
+                            }
+                        }
+
+                        //set the light
+                        Program.myFinch.setLED(rgb[0], rgb[1], rgb[2]);
+                    }
+                    else if (actions[index].Contains(SET_BUZZ_TAG_2))
+                    {
+                        // ************************
+                        // * extract the settings *
+                        // ************************
+
+                        //remove the tag
+                        actions[index] = actions[index].Remove(0, SET_BUZZ_TAG_2.Length);
+
+                        //variables needed for the extraction
+                        int frequency = 0;
+                        string input = "";
+
+                        //extract the frequency setting
+                        for (int freqIndex = 0; freqIndex < actions[index].Length; ++freqIndex)
+                        {
+                            if (actions[index][freqIndex] == ';')
+                            {
+                                if (!int.TryParse(input, out frequency))
+                                {
+                                    //throws an exception if the argument input contains anything other than numbers
+                                    throw new ArgumentException("Invalid arguement in input string.");
+                                }
+
+                                break;
+                            }
+
+                            //add current char
+                            input += actions[index][freqIndex];
+                        }
+
+                        //set the finch buzzer
+                        if (frequency == 0)
+                        {
+                            Program.myFinch.noteOff();
+                        }
+                        else
+                        {
+                            Program.myFinch.noteOn(frequency);
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Searches an actionMessage string for a specific data tag and extracts the data.
+        /// </summary>
+        /// <param name="actionMessage">Message to search</param>
+        /// <param name="tag">Target tag</param>
+        /// <param name="tagData">OUT: returns a string with the tag data</param>
+        /// <returns>returns a boolean representing if the tag was found in the string</</returns>
+        static private bool ExtractTag(string actionMessage, string tag, out string tagData)
+        {
+            //
+            //
+            //
+            string data = "";
+            bool beginSearch = false;
+            int tagLocation = actionMessage.LastIndexOf(tag);
+
+            //check if the tag is exists in the action message
+            if (!actionMessage.Contains(tag))
+            {
+                tagData = "___TAG_NOT_FOUND___";
+                return false;
+            }
+
+            for (int index = tagLocation; index < actionMessage.Length; ++index)
+            {
+                //find the tag start
+                if (actionMessage[index] == ':')
+                {
+                    beginSearch = true;
+                }
+                //find the end
+                else if (actionMessage[index] == ';')
+                {
+                    beginSearch = false;
+                    break;
+                }
+                //process tag data
+                else if (beginSearch)
+                {
+                    data += actionMessage[index];
+                }
+            }
+
+            //return results
+            tagData = data;
+            return true;
+        }
+
+        /// <summary>
+        /// Searches an actionMessage string for a specific data tag to see if it exists.
+        /// </summary>
+        /// <param name="actionMessage">Message to search</param>
+        /// <param name="tag">Target tag</param>
+        /// <returns>returns a boolean representing if the tag was found in the string</</returns>
+        static private bool CheckTag(string actionMessage, string tag)
+        {
+            //check if the tag is exists in the action message
+            if (!actionMessage.Contains(tag))
+            {
+                return false;
+            }
+
+            //if the tag exists it will return true
+            return true;
+        }
+
+        static public Sensor dataSensor
         {
             private set;
             get;
@@ -378,8 +1128,18 @@ namespace M3FinchControl
 
         static private List<Alert> lowAlarm;
         static private List<Alert> highAlarm;
+        static private bool alarmPhaseOne;
+        static private ulong finalAlarmCycle;
 
-        const string DEFAULT_MESSAGE_LOW = "Low threshold reached.";
-        const string DEFAULT_MESSAGE_HIGH = "Upper threshold reached.";
+        //default action messages
+        const string DEFAULT_MESSAGE_LOW = OUTPUT_MESSAGE_TAG + "Low threshold reached.;";
+        const string DEFAULT_MESSAGE_HIGH = OUTPUT_MESSAGE_TAG + "Upper threshold reached.;";
+        
+        //action message tags
+        const string OUTPUT_MESSAGE_TAG = "#OUTPUT_MESSAGE:";
+        const string SET_LED_TAG_1 = "#SET_LED_1:";
+        const string SET_BUZZ_TAG_1 = "#SET_BUZZ_1:";
+        const string SET_LED_TAG_2 = "#SET_LED_2:";
+        const string SET_BUZZ_TAG_2 = "#SET_BUZZ_2:";
     }
 }

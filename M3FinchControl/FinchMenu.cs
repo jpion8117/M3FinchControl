@@ -57,10 +57,22 @@ namespace M3FinchControl
             enterKeyPressed = false;
             onHoverUpdate = false;
             selectedOption = "";
+            previousSelection = 0;
         }
         public void SetFinchRobot(Finch finch)
         {
             myFinch = finch;
+        }
+        public void RecallPreviousSelection()
+        {
+            //clear the option selector
+            Console.SetCursorPosition(properties.selectorCol, properties.firstLine + properties.currentOption);
+            for (int curChar = 0; curChar < selectionIndicator.Length; ++curChar)
+                Console.Write(" ");
+
+            //update all the nessassary bs...
+            properties.currentOption = previousSelection;
+            selectedOption = optionIDs[properties.currentOption];
         }
         #region Menu Template Loading Method
         /// <summary>
@@ -399,14 +411,15 @@ namespace M3FinchControl
                 properties.currentOption = 0;
                 selectedOption = optionIDs[properties.currentOption];
 
-                //clear the screen set on hover update to true
-                Console.Clear();
-                onHoverUpdate = true;
-
                 //set console config
+                Console.SetCursorPosition(0, 0);
                 Console.WindowHeight = properties.consoleHeight;
                 Console.WindowWidth = properties.consoleWidth;
                 Console.CursorVisible = false;
+
+                //clear the screen set on hover update to true
+                Console.Clear();
+                onHoverUpdate = true;
 
                 //output the template file to the console
                 for (int i = 0; i < template.Length; ++i)
@@ -474,6 +487,7 @@ namespace M3FinchControl
                         {
                             properties.currentOption--;
                             selectedOption = optionIDs[properties.currentOption];
+                            previousSelection = properties.currentOption;
                         }
                     }
                 }
@@ -505,6 +519,7 @@ namespace M3FinchControl
                         {
                             properties.currentOption++;
                             selectedOption = optionIDs[properties.currentOption];
+                            previousSelection = properties.currentOption;
                         }
                     }
                 }
@@ -694,6 +709,7 @@ namespace M3FinchControl
             ConsoleKeyInfo key;
             char keyChar;
             bool gatheringInput = true;
+            string methodOutput = "";
 
             while (gatheringInput)
             {
@@ -750,7 +766,9 @@ namespace M3FinchControl
                 DisplayOutput();
             }
 
-            return inputString;
+            methodOutput = inputString;
+            inputString = "";
+            return methodOutput;
         }
         #endregion
 
@@ -762,6 +780,7 @@ namespace M3FinchControl
         private string[] formatedOutput;
         private string selectionIndicator;
         private string outputString;
+        private int previousSelection;
         public string inputString
         {
             get;

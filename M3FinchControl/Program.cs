@@ -154,6 +154,159 @@ namespace M3FinchControl
             //return the valid input that was identified
             return validInput[index];
         }
+        static public int ValidateInput(string prompt, int max, bool includeMax = false, int min = 0, bool includeMin = true)
+        {
+            int output = 0;
+            string userInput = "";
+            string error = "\n\nINVALID INPUT: Please enter a whole number between ";
+            bool invalidInput = false;
+
+            //configure error message
+            if (includeMin)
+            {
+                error += min.ToString() + "-";
+            }
+            else
+            {
+                error += (min + 1).ToString() + "-";
+            }
+
+            if (includeMax)
+            {
+                error += max.ToString() + ") ";
+            }
+            else
+            {
+                error += (max + 1).ToString() + ") ";
+            }
+
+            error += "\n\n Press any key to continue...";
+
+            //a series of random characters for the loop to look for. I made it random so it's nearly imposible to type it in and skip validation
+            const string VALIDATION_TRIGGER = "EuntufeLKJEFOIHJOFEohEOFhuohnEFKhEKJNEKHJkEFFNjohjEFEOUHonEFKjnEFOUhEFNKFJEHIUHFOENUIFGYIOIHJ$U&Y" +
+                "^&RY&YHIFUNIUGHE(*&&GHFIUh97ye79efh78h97&FHIUeghg7huiwfiyh3HO*HF#NFUH(WHEIUWFNIH7iebnwKUHI&hiu3EFBNKUHI&h#FBIUKBfKUGHoiHOWNFOUh" +
+                "iugufhEUBHfoiuhvuikBikukhvikBIUDfhfiunkjhsiufehubFibkhfbkuehkjfbKHKfhiukeb"; 
+
+            while(userInput != VALIDATION_TRIGGER)
+            {
+                //reset invalidInput
+                invalidInput = false;
+
+                //display prompt
+                menus[currentMenu].Clear();
+                menus[currentMenu].Write(prompt);
+                userInput = menus[currentMenu].ReadLine();
+
+                //convert to an int
+                if (int.TryParse(userInput, out output))
+                {
+                    //check if it exceeds the high threshold
+                    if (includeMax)
+                    {
+                        if (output > max) 
+                        {
+                            invalidInput = true;
+                        }
+                    }
+                    else
+                    {
+                        if (output >= max)
+                        {
+                            invalidInput = true;
+                        }
+                    }
+
+                    //check if it exceeds the low threshold
+                    if(includeMin)
+                    {
+                        if (output < min)
+                        {
+                            invalidInput = true;
+                        }
+                    }
+                    else
+                    {
+                        if (output <= min)
+                        {
+                            invalidInput = true;
+                        }
+                    }
+
+                    if(!invalidInput)
+                    {
+                        userInput = VALIDATION_TRIGGER;
+                    }
+                    else
+                    {
+                        menus[currentMenu].WriteLine(error);
+                        Console.ReadKey();
+                    }
+                }
+                else
+                {
+                    menus[currentMenu].WriteLine(error);
+                    Console.ReadKey();
+                }
+            }
+
+            return output;
+        }
+        static public string ValidateInput(string prompt, char[] illegalCharacters)
+        {
+            bool validing = true;
+            bool illegalCharFound = false;
+            string userInput = "";
+            char illegalChar = ' ';
+
+            while (validing)
+            {
+                //reset illegalCharFound
+                illegalCharFound = false;
+
+                menus[currentMenu].Clear();
+                menus[currentMenu].Write(prompt);
+                userInput = menus[currentMenu].ReadLine();
+
+                //check if input matches a valid input
+                for (int index = 0; index < userInput.Length; ++index)
+                {
+                    if(!illegalCharFound)
+                    {
+                        for (int charIndex = 0; charIndex < illegalCharacters.Length; ++charIndex) 
+                        {
+                            if(userInput[index] == illegalCharacters[charIndex])
+                            {
+                                illegalChar = illegalCharacters[charIndex];
+                                illegalCharFound = true;
+                                break;
+                            }
+                        }
+                    }
+                    //if the loop finished without finding any illegal chars validation is now complete
+                    else if (index == userInput.Length - 1)
+                    {
+                        validing = false;
+                    }
+                    //stops the search if an illegal char was found. Slight efficiency improvement over continuing search loop.
+                    else
+                    {
+                        break;
+                    }
+                }
+
+                //if an invalid char was found, display error and start again.
+                if (illegalCharFound)
+                {
+                    menus[currentMenu].WriteLine("\n" + "Invalid Input: illegal character '"+illegalChar +"' detected. \n\nPress any key to try again...");
+                    Console.ReadKey();
+                }
+
+                validing = illegalCharFound;
+            }
+
+            //return the validated input string
+            return userInput;
+        }
         static void DisplayMenuError(string error = "Invalid selection, Press any key to continue...")
         {
             //clear the menu IO
@@ -311,7 +464,7 @@ namespace M3FinchControl
                 case "configureRecorder":
                     if (onSelect)
                     {
-                        configureRecorder();
+                        ConfigureRecorder();
                     }
                     else
                     {
@@ -391,6 +544,7 @@ namespace M3FinchControl
                     {
                         currentMenu = (int)title.recorderMenu;
                         menus[currentMenu].RefreshMenu(true);
+                        menus[currentMenu].RecallPreviousSelection();
                     }
                     else
                     {
@@ -408,7 +562,7 @@ namespace M3FinchControl
                         menus[currentMenu].RefreshMenu(true);
 
                         //configure default parameters for the module
-                        FinchAlarm.ConfigureAlarm(new int[] { 50, 17, 60, 18, }, new int[] { 80, 88, 83, 81, 99 }, FinchAlarm.Sensor.temperatureF);
+                        FinchAlarm.ConfigureAlarm(45, 75, FinchAlarm.Sensor.temperatureF);
                     }
                     else
                     {
@@ -428,6 +582,64 @@ namespace M3FinchControl
                         menus[currentMenu].WriteLine("                     Sensor to monitor: " + FinchAlarm.dataSensorStr);
                         menus[currentMenu].WriteLine("\nPress enter to modifiy the current configuration.");
 
+                    }
+                    break;
+                case "startAlarm":
+                    if (onSelect)
+                    {
+                        string animatedString = "";
+                        bool updateDisplay = true;
+
+                        for (ulong alarmCycle = 0; FinchAlarm.ProcessAlarmCycle(alarmCycle); ++alarmCycle)
+                        {
+                            //wait 1 millisecond
+                            System.Threading.Thread.Sleep(1);
+
+                            if (updateDisplay)
+                            {
+                                menus[currentMenu].Clear();
+
+                                //inform user of escape proceedure
+                                menus[currentMenu].WriteLine("Monitoring in progress. Press esc to abort monitoring...");
+
+                                menus[currentMenu].WriteLine(animatedString + "\n\n");
+
+                                updateDisplay = false;
+                            }
+
+                            //make some kind of indicator that the thing's not frozen
+                            if ((alarmCycle % 250) == 0)
+                            {
+                                updateDisplay = true;
+                                animatedString += ".  ";
+                            }
+                            else if ((alarmCycle % 10000) == 0)
+                            {
+                                updateDisplay = true;
+                                animatedString = "";
+                            }
+
+                            //check for escape key
+                            if (Console.KeyAvailable) 
+                            {
+                                if(Console.ReadKey().Key == ConsoleKey.Escape)
+                                {
+                                    break;
+                                }
+                            }
+                        }
+
+                        //reset finch
+                        myFinch.setLED(0, 255, 0);
+                        myFinch.noteOff();
+                    }
+                    else
+                    {
+                        menus[currentMenu].WriteLine("Configure the parameters of the alarm system.");
+                        menus[currentMenu].WriteLine("\nCurrent configuration...");
+                        menus[currentMenu].WriteLine("                       Time to monitor: " + FinchAlarm.timeToMonitor + FinchAlarm.unitOfTimeStr);
+                        menus[currentMenu].WriteLine("                     Sensor to monitor: " + FinchAlarm.dataSensorStr);
+                        menus[currentMenu].WriteLine("\n\nPress enter to begin monitoring sensors.");
                     }
                     break;
 
@@ -620,7 +832,7 @@ namespace M3FinchControl
         /// <summary>
         /// Get data recorder settings from the user and configure the DataRecorder to begin recording
         /// </summary>
-        static void configureRecorder()
+        static void ConfigureRecorder()
         {
             // *************
             // * Variables *
@@ -924,4 +1136,3 @@ namespace M3FinchControl
         #endregion
     }
 }
-
