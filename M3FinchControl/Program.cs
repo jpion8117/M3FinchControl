@@ -587,51 +587,69 @@ namespace M3FinchControl
                 case "startAlarm":
                     if (onSelect)
                     {
-                        string animatedString = "";
-                        bool updateDisplay = true;
-
-                        for (ulong alarmCycle = 0; FinchAlarm.ProcessAlarmCycle(alarmCycle); ++alarmCycle)
+                        //stop me from doing stupid stuff!
+                        if (finchConnected)
                         {
-                            //wait 1 millisecond
-                            System.Threading.Thread.Sleep(1);
+                            bool alarmActive = true;
+                            bool swapCycle = false;
+                            System.Diagnostics.Stopwatch timer = new System.Diagnostics.Stopwatch();
 
-                            if (updateDisplay)
+                            //inform user of escape proceedure
+                            menus[currentMenu].Clear();
+                            menus[currentMenu].WriteLine("Monitoring in progress. Press esc to abort monitoring...\n");
+
+                            //start the timer
+                            timer.Start();
+
+                            while (alarmActive)
                             {
-                                menus[currentMenu].Clear();
-
-                                //inform user of escape proceedure
-                                menus[currentMenu].WriteLine("Monitoring in progress. Press esc to abort monitoring...");
-
-                                menus[currentMenu].WriteLine(animatedString + "\n\n");
-
-                                updateDisplay = false;
-                            }
-
-                            //make some kind of indicator that the thing's not frozen
-                            if ((alarmCycle % 250) == 0)
-                            {
-                                updateDisplay = true;
-                                animatedString += ".  ";
-                            }
-                            else if ((alarmCycle % 10000) == 0)
-                            {
-                                updateDisplay = true;
-                                animatedString = "";
-                            }
-
-                            //check for escape key
-                            if (Console.KeyAvailable) 
-                            {
-                                if(Console.ReadKey().Key == ConsoleKey.Escape)
+                                if ((timer.ElapsedMilliseconds % 100) < 3)
                                 {
-                                    break;
+                                    swapCycle = !swapCycle;
+                                }
+
+                                FinchAlarm.ProcessAlarmCycle(swapCycle);
+
+                                //check for escape key
+                                if (Console.KeyAvailable)
+                                {
+                                    if (Console.ReadKey().Key == ConsoleKey.Escape)
+                                    {
+                                        alarmActive = false;
+                                    }
+                                }
+                                else if ((ulong)timer.ElapsedMilliseconds >= FinchAlarm.finalAlarmCycle)
+                                {
+                                    timer.Stop();
+                                    timer.Reset();
+                                    alarmActive = false;
                                 }
                             }
-                        }
 
-                        //reset finch
-                        myFinch.setLED(0, 255, 0);
-                        myFinch.noteOff();
+                            //reset finch
+                            myFinch.setLED(0, 255, 0);
+                            myFinch.noteOff();
+
+                            //let the user know the test has ended
+                            menus[currentMenu].Clear();
+                            menus[currentMenu].WriteLine("Monitoring has ended. Press any key to continue...");
+                            Console.Beep();
+                            Console.ReadKey();
+
+                            //clear IO
+                            menus[currentMenu].Clear();
+                        }
+                        else
+                        {
+                            menus[currentMenu].Clear();
+                            menus[currentMenu].WriteLine("Can not start monitoring until Finch is connected, \n\nPress any key to continue...");
+                            Console.Beep();
+                            Console.Beep();
+                            Console.Beep();
+                            Console.Beep();
+                            Console.Beep();
+                            Console.ReadKey();
+                        }
                     }
                     else
                     {
