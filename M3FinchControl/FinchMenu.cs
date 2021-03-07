@@ -411,15 +411,16 @@ namespace M3FinchControl
                 properties.currentOption = 0;
                 selectedOption = optionIDs[properties.currentOption];
 
+                //clear the screen set on hover update to true
+                Console.Clear();
+                onHoverUpdate = true;
+
                 //set console config
                 Console.SetCursorPosition(0, 0);
                 Console.WindowHeight = properties.consoleHeight;
                 Console.WindowWidth = properties.consoleWidth;
                 Console.CursorVisible = false;
-
-                //clear the screen set on hover update to true
-                Console.Clear();
-                onHoverUpdate = true;
+                Console.BufferWidth = properties.consoleWidth;
 
                 //output the template file to the console
                 for (int i = 0; i < template.Length; ++i)
