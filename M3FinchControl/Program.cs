@@ -66,8 +66,7 @@ namespace M3FinchControl
 
             //configure console color
             //future revisions may also put this in the config (.jp) file
-            Console.BackgroundColor = ConsoleColor.White;
-            Console.ForegroundColor = ConsoleColor.DarkBlue;
+            Console.ForegroundColor = ConsoleColor.DarkYellow;
             
             //load menus
             menus[(int)title.main].LoadTemplate("config\\MainMenu.txt");
