@@ -656,7 +656,7 @@ namespace M3FinchControl
                         if (validatedInput == "yes" | validatedInput == "y")
                         {
                             prompt = "Please enter the message you would like to display when this threshold is crossed...\n\nMessage: ";
-                            actionMessage += OUTPUT_MESSAGE_TAG + Program.ValidateInput(prompt, new char[] { ',', '#', ';' });
+                            actionMessage += OUTPUT_MESSAGE_TAG + Program.ValidateInput(prompt, new char[] { ',', '#', ';' }) + ';';
                         }
 
                         //if no alerts were set the 
@@ -1026,8 +1026,9 @@ namespace M3FinchControl
                     // * extract the message *
                     // ***********************
 
-                    //remove the tag
+                    //remove the tag and the ';'
                     actions[index] = actions[index].Remove(0, OUTPUT_MESSAGE_TAG.Length);
+                    actions[index] = actions[index].Remove(actions[index].IndexOf(';'));
 
                     //output the message to the console
                     Program.menus[Program.currentMenu].WriteLine(actions[index], true);

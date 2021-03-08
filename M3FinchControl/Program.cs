@@ -572,6 +572,19 @@ namespace M3FinchControl
                     if(onSelect)
                     {
                         FinchAlarm.GetConfigFromUser();
+
+                        //display settings saved confirmation
+                        menus[currentMenu].Clear();
+                        menus[currentMenu].WriteLine("Settings saved." +                                                     
+                                                 "\n\nPress any key to continue...");
+                        Console.ReadKey();
+
+                        menus[currentMenu].Clear();
+                        menus[currentMenu].WriteLine("Configure the parameters of the alarm system.");
+                        menus[currentMenu].WriteLine("\nCurrent configuration...");
+                        menus[currentMenu].WriteLine("                       Time to monitor: " + FinchAlarm.timeToMonitor + FinchAlarm.unitOfTimeStr);
+                        menus[currentMenu].WriteLine("                     Sensor to monitor: " + FinchAlarm.dataSensorStr);
+                        menus[currentMenu].WriteLine("\nPress enter to modifiy the current configuration.");
                     }
                     else
                     {
@@ -580,7 +593,6 @@ namespace M3FinchControl
                         menus[currentMenu].WriteLine("                       Time to monitor: " + FinchAlarm.timeToMonitor + FinchAlarm.unitOfTimeStr);
                         menus[currentMenu].WriteLine("                     Sensor to monitor: " + FinchAlarm.dataSensorStr);
                         menus[currentMenu].WriteLine("\nPress enter to modifiy the current configuration.");
-
                     }
                     break;
                 case "startAlarm":
@@ -592,18 +604,21 @@ namespace M3FinchControl
                             bool alarmActive = true;
                             bool swapCycle = false;
                             System.Diagnostics.Stopwatch timer = new System.Diagnostics.Stopwatch();
+                            System.Diagnostics.Stopwatch phaseSwapTimer = new System.Diagnostics.Stopwatch();
 
                             //inform user of escape proceedure
                             menus[currentMenu].Clear();
                             menus[currentMenu].WriteLine("Monitoring in progress. Press esc to abort monitoring...\n");
 
-                            //start the timer
+                            //start the timers
                             timer.Start();
+                            phaseSwapTimer.Start();
 
                             while (alarmActive)
                             {
-                                if ((timer.ElapsedMilliseconds % 100) < 3)
+                                if (phaseSwapTimer.ElapsedMilliseconds >= 500)
                                 {
+                                    phaseSwapTimer.Restart();
                                     swapCycle = !swapCycle;
                                 }
 
