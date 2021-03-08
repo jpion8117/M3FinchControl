@@ -746,7 +746,7 @@ namespace M3FinchControl
                             }
 
                             //remove the last char and the input identifier from the input string
-                            inputString = inputString.Remove(inputString.Length - 1);
+                            inputString = inputString.Remove(inputString.Length -1);
                         }
                     }
                     //some valid char was pressed
