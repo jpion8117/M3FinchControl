@@ -41,6 +41,7 @@ namespace M3FinchControl
             {
                 actionMessage = action;
                 triggerValue = trigger;
+                activeAlert = false;
             }
 
             public int CompareTo(Alert other)
@@ -126,6 +127,7 @@ namespace M3FinchControl
 
             public string actionMessage;
             public int triggerValue;
+            public bool activeAlert;
         }
 
         /// <summary>
@@ -375,10 +377,10 @@ namespace M3FinchControl
                 timeToMonitor = validatedInt;
 
                 //allow the user to set low thresholds
-                lowAlarm = SetAlertThresholds(lowAlarm, "lower");
+                lowAlarm = SetAlertThresholds("lower");
 
                 //allow the user to set high thresholds
-                highAlarm = SetAlertThresholds(highAlarm, "higher");
+                highAlarm = SetAlertThresholds("higher");
             }
             else if (validatedInput == "no" | validatedInput == "n")
             {
@@ -389,13 +391,14 @@ namespace M3FinchControl
             finalAlarmCycle = (ulong)(timeToMonitor * (int)unitOfTime);
         }
 
-        static List<Alert> SetAlertThresholds(List<Alert> thresholdList, string currentRange)
+        static List<Alert> SetAlertThresholds(string currentRange)
         {
             bool makingSelection = true;
             string prompt = "";
             string validatedInput = "";
             string actionMessage = "";
             int triggerValue = 0;
+            List<Alert> thresholdList = new List<Alert>();
 
             while (makingSelection)
             {
@@ -587,7 +590,7 @@ namespace M3FinchControl
                             max = 255;
 
                             int[] rgb = { 0, 0, 0 };
-                            string[] rgbDescriptor = { "red", "blue", "green" };
+                            string[] rgbDescriptor = { "red", "green", "blue" };
 
                             while (!validAlert)
                             {
@@ -630,8 +633,8 @@ namespace M3FinchControl
                                 //confirm color selection
                                 prompt = "Here is the RGB based color you have requested\n" +
                                          "    Red: " + rgb[0].ToString() + "\n" +
-                                         "   Blue: " + rgb[1].ToString() + "\n" +
-                                         "  Green: " + rgb[2].ToString() + "\n" +
+                                         "  Green: " + rgb[1].ToString() + "\n" +
+                                         "   Blue: " + rgb[2].ToString() + "\n" +
                                          "\nIs this correct? ";
 
                                 validatedInput = Program.ValidateInput(prompt, new string[] { "yes", "y", "no", "n" },
@@ -653,7 +656,7 @@ namespace M3FinchControl
                         if (validatedInput == "yes" | validatedInput == "y")
                         {
                             prompt = "Please enter the message you would like to display when this threshold is crossed...\n\nMessage: ";
-                            actionMessage += OUTPUT_MESSAGE_TAG + Program.ValidateInput(prompt, new char[] { ',', '#', ';' });
+                            actionMessage += OUTPUT_MESSAGE_TAG + Program.ValidateInput(prompt, new char[] { ',', '#', ';' }) + ';';
                         }
 
                         //if no alerts were set the 
@@ -742,7 +745,7 @@ namespace M3FinchControl
             }
         }
 
-        static public bool ProcessAlarmCycle(ulong cycleNumber)
+        static public void ProcessAlarmCycle(bool switchCycle)
         {
             // *************
             // * Variables *
@@ -770,14 +773,17 @@ namespace M3FinchControl
             }
 
             //flip phase every second
-            if ((cycleNumber % 5000) == 0) 
-            {
-                alarmPhaseOne = !alarmPhaseOne;
-            }
+            alarmPhaseOne = switchCycle;
 
             //reset finch
-            Program.myFinch.setLED(0, 255, 0);
-            Program.myFinch.noteOff();
+            if (!alarmActive)
+            {
+                Program.myFinch.setLED(0, 255, 0);
+                Program.myFinch.noteOff();
+            }
+
+            //set alarm active to false
+            alarmActive = false;
 
             //check low threshold
             if (lowAlarm.Count != 0)
@@ -787,10 +793,11 @@ namespace M3FinchControl
 
                 foreach (Alert currentCheck in lowAlarm)
                 {
-                    if (currentCheck < sensorData)
+                    if (currentCheck.triggerValue > sensorData)
                     {
                         //process the alarm output
                         ProcessAlarmMessage(currentCheck.actionMessage);
+                        alarmActive = true;
                         break;
                     }
                 }
@@ -801,20 +808,19 @@ namespace M3FinchControl
             {
                 //sort the list
                 highAlarm.Sort();
+                highAlarm.Reverse();
 
                 for (int index = 0; index < highAlarm.Count; ++index)
                 {
-                    if (highAlarm[index] > sensorData)
+                    if (highAlarm[index].triggerValue < sensorData)
                     {
                         //process the alarm output
                         ProcessAlarmMessage(highAlarm[index].actionMessage);
+                        alarmActive = true;
                         break;
                     }
                 }
             }
-
-            //return message
-            return cycleNumber != finalAlarmCycle; 
         }
 
         /// <summary>
@@ -843,7 +849,7 @@ namespace M3FinchControl
                 }
             }
 
-            //run the actions
+            //run the phase dependant actions
             for (int index = 0; index < actions.Count; ++index)
             {
                 //determines if alarm is in phase 1 or 2
@@ -929,19 +935,6 @@ namespace M3FinchControl
                             Program.myFinch.noteOn(frequency);
                         }
                     }
-                    else if (actions[index].Contains(OUTPUT_MESSAGE_TAG))
-                    {
-                        // ***********************
-                        // * extract the message *
-                        // ***********************
-
-                        //remove the tag
-                        actions[index] = actions[index].Remove(0, OUTPUT_MESSAGE_TAG.Length);
-
-                        //output the message to the console
-                        Program.menus[Program.currentMenu].Clear();
-                        Program.menus[Program.currentMenu].WriteLine(actions[index]);
-                    }
                 }
                 else
                 {
@@ -1025,6 +1018,20 @@ namespace M3FinchControl
                             Program.myFinch.noteOn(frequency);
                         }
                     }
+                }
+
+                if (actions[index].Contains(OUTPUT_MESSAGE_TAG))
+                {
+                    // ***********************
+                    // * extract the message *
+                    // ***********************
+
+                    //remove the tag and the ';'
+                    actions[index] = actions[index].Remove(0, OUTPUT_MESSAGE_TAG.Length);
+                    actions[index] = actions[index].Remove(actions[index].IndexOf(';'));
+
+                    //output the message to the console
+                    Program.menus[Program.currentMenu].WriteLine(actions[index], true);
                 }
             }
         }
@@ -1129,7 +1136,12 @@ namespace M3FinchControl
         static private List<Alert> lowAlarm;
         static private List<Alert> highAlarm;
         static private bool alarmPhaseOne;
-        static private ulong finalAlarmCycle;
+        static private bool alarmActive;
+        static public ulong finalAlarmCycle
+        {
+            private set;
+            get;
+        }
 
         //default action messages
         const string DEFAULT_MESSAGE_LOW = OUTPUT_MESSAGE_TAG + "Low threshold reached.;";

@@ -696,8 +696,14 @@ namespace M3FinchControl
         /// Simple function that writes a string to the output area with an end of line char at the end, works just like Console.WriteLine but only effects the menu IO area
         /// </summary>
         /// <param name="line">Line to be written to the menu output string<</param>
-        public void WriteLine(string line)
+        /// <param name="spamGuard">prevents duplicate messages from being written to the output<</param>
+        public void WriteLine(string line, bool spamGuard = false)
         {
+            if(spamGuard & outputString.Contains(line))
+            {
+                return;
+            }
+
             outputString += line + '\n';
 
             DisplayOutput();
@@ -740,7 +746,7 @@ namespace M3FinchControl
                             }
 
                             //remove the last char and the input identifier from the input string
-                            inputString = inputString.Remove(inputString.Length - 1);
+                            inputString = inputString.Remove(inputString.Length -1);
                         }
                     }
                     //some valid char was pressed
