@@ -326,14 +326,17 @@ namespace M3FinchControl
         /// <param name="onSelect">Toggles between normal navagation clicks and alt hover actions (true = click, false = hover)</param>
         static void MenuNavigation(bool onSelect = true)
         {
+            //set the cursor to invisible
+            menus[currentMenu].showInputCursor = false;
+
             //display a warning if the finch is not connected and the finches name if it is
-            if(!onSelect & !finchConnected)
+            if (!onSelect & !finchConnected)
             {
                 menus[currentMenu].WriteLine("WARNING: finch robot not connected...");
                 menus[currentMenu].WriteLine("            finch related functions will not work until");
                 menus[currentMenu].WriteLine("            your finch is connected!\n");
             }
-            else if(!onSelect)
+            else if (!onSelect)
             {
                 menus[currentMenu].WriteLine(name + " is standing by for commands...\n");
             }
@@ -365,7 +368,7 @@ namespace M3FinchControl
                     else
                     {
                         menus[currentMenu].WriteLine("Go to the Talent Show menu...");
-                        menus[currentMenu].WriteLine("\nObserve the finch participating in one of 3 exciting events!");
+                        menus[currentMenu].Write("\nObserve the finch participating in one of 3 exciting events!");
                     }
                     break;
 
@@ -388,6 +391,9 @@ namespace M3FinchControl
                 case "connect":
                     if (onSelect)
                     {
+                        //show input cursor
+                        menus[currentMenu].showInputCursor = true;
+
                         name = ConnectFinch();
 
                         //verify the finch is connected

@@ -52,12 +52,16 @@ namespace M3FinchControl
             properties.maxOutputChars = 2000;
             selectionIndicator = "*";
             inputString = "";
-            outputString = inputString;
+            outputString = "";
             formatedOutput = new string[1];
             enterKeyPressed = false;
             onHoverUpdate = false;
             selectedOption = "";
             previousSelection = 0;
+            inputBlinkTimer = new System.Diagnostics.Stopwatch();
+            inputBlinkTimer.Start();
+            showInputCursor = true;
+            inputCursorActive = true;
         }
         public void SetFinchRobot(Finch finch)
         {
@@ -527,7 +531,6 @@ namespace M3FinchControl
                 else if (key.Key == ConsoleKey.Enter)
                 {
                     enterKeyPressed = true;
-                    //inputString = "";
                 }
                 else if (keyChar != '\u0000')
                 {
@@ -537,25 +540,24 @@ namespace M3FinchControl
                         //make sure there is input to delete
                         if (inputString.Length > 0)
                         {
-                            //remove previous input string from the output string;
-                            int inputStringIndex = outputString.Length - inputString.Length;
-                            if (inputStringIndex >= 0 & outputString.Length != 0 & inputString.Length > 0)
-                                outputString = outputString.Remove(inputStringIndex);
-
                             //remove the last char from the input string
                             inputString = inputString.Remove(inputString.Length - 1);
                         }
                     }
                     else
                     {
-                        //remove previous input string from the output string;
-                        int inputStringIndex = outputString.Length - inputString.Length;
-                        if (inputStringIndex >= 0 & outputString.Length != 0 & inputString.Length > 0)
-                            outputString = outputString.Remove(inputStringIndex);
+                        ////remove previous input string from the output string;
+                        //if (inputString != "")
+                        //{
+                        //    int inputStringIndex = outputString.Length - inputString.Length;
+                        //    if (inputStringIndex >= 0 & outputString.Length != 0 & inputString.Length > 0)
+                        //    {
+                        //        outputString = outputString.Remove(inputStringIndex);
+                        //    }
+                        //}
 
                         // add char to the input string
                         inputString += keyChar;
-
                     }
                 }
             }
@@ -564,15 +566,22 @@ namespace M3FinchControl
 
         private void DisplayOutput()
         {
-            //remove previous input string from the output string;
-            int inputStringIndex = outputString.Length - inputString.Length;
-            if (inputStringIndex >= 0 & outputString.Length != 0 & inputString.Length > 0 & inputString.Length > 0)
-            {
-                outputString = outputString.Remove(inputStringIndex);
-            }
+            //THE SOLUTION TO (almost) ALL MY PROBLEMS!!!
+            //combine the output and input into a single string
+            string combinedIOString = outputString + inputString;
 
-            //add the input string to the end of the output string
-            outputString += inputString;
+            //blink the cursor
+            if(inputBlinkTimer.ElapsedMilliseconds > CURSOR_BLINK_RATE & showInputCursor)
+            { 
+                inputCursorActive = !inputCursorActive;
+                inputBlinkTimer.Restart();
+            }
+                
+            if (inputCursorActive & showInputCursor)
+            {
+                combinedIOString += INPUT_IDENTIFIER;
+            }
+                   
 
             //variable containing the currently formating line
             string line = "";
@@ -588,27 +597,28 @@ namespace M3FinchControl
             {
                 formatedOutput[lineNum] = line;
             }
+
             //begin output string format loop
             for (int lineNum = 0; lineNum < formatedOutput.Length; ++lineNum)
             {
                 //reset the line
                 line = "";
 
-                while (curChar < outputString.Length)
+                while (curChar < combinedIOString.Length)
                 {
                     //breaks loop when a logical break point is found near the end of the line
                     if (curChar - charsParsed == properties.maxCharPerLine - 1)
                     {
                         break;
                     }
-                    else if (outputString[curChar] == '\n')
+                    else if (combinedIOString[curChar] == '\n')
                     {
                         curChar++;
                         break;
                     }
                     else
                     {
-                        line += outputString[curChar];
+                        line += combinedIOString[curChar];
                     }
 
                     //advance curChar
@@ -628,7 +638,7 @@ namespace M3FinchControl
                 formatedOutput[lineNum] = line;
 
                 //if the output exceeds the max output area, discard first line and move other lines up
-                if (lineNum == formatedOutput.Length - 1 & charsParsed < outputString.Length)
+                if (lineNum == formatedOutput.Length - 1 & charsParsed < combinedIOString.Length)
                 {
                     for (int i = 0; i < formatedOutput.Length - 1; ++i)
                     {
@@ -720,55 +730,35 @@ namespace M3FinchControl
 
             while (gatheringInput)
             {
-                //gets the key that was pressed
-                key = Console.ReadKey(true);
-                keyChar = key.KeyChar;
+                if (Console.KeyAvailable)
+                {
+                    //gets the key that was pressed
+                    key = Console.ReadKey(true);
+                    keyChar = key.KeyChar;
 
-                if (key.Key == ConsoleKey.Enter)
-                {
-                    gatheringInput = false;
-                }
-                else if (keyChar != '\u0000')
-                {
-                    //check for the backspace key
-                    if (keyChar == (char)8)
+                    if (key.Key == ConsoleKey.Enter)
                     {
-                        if (inputString.Length > 0)
-                        {
-                            //remove previous input string from the output string;
-                            if (inputString != "")
-                            {
-                                int inputStringIndex = outputString.Length - inputString.Length;
-                                if (inputStringIndex >= 0 & outputString.Length != 0 & inputString.Length > 0)
-                                {
-                                    outputString = outputString.Remove(inputStringIndex);
-                                }
-                            }
-
-                            //remove the last char and the input identifier from the input string
-                            inputString = inputString.Remove(inputString.Length -1);
-                        }
+                        gatheringInput = false;
                     }
-                    //some valid char was pressed
-                    else
+                    else if (keyChar != '\u0000')
                     {
-                        //remove previous input string from the output string;
-                        if (inputString != "")
+                        //check for the backspace key
+                        if (keyChar == (char)8)
                         {
-                            int inputStringIndex = outputString.Length - inputString.Length;
-                            if (inputStringIndex >= 0 & outputString.Length != 0 & inputString.Length > 0)
+                            if (inputString.Length > 0)
                             {
-                                outputString = outputString.Remove(inputStringIndex);
+                                //remove the last char and the input identifier from the input string
+                                inputString = inputString.Remove(inputString.Length - 1);
                             }
                         }
-
-                        // add char to the input string
-                        inputString += keyChar;
-
+                        //some valid char was pressed
+                        else
+                        {
+                            // add char to the input string
+                            inputString += keyChar;
+                        }
                     }
                 }
-                //add the input string to the output string
-                outputString += inputString;
 
                 DisplayOutput();
             }
@@ -788,6 +778,9 @@ namespace M3FinchControl
         private string selectionIndicator;
         private string outputString;
         private int previousSelection;
+        private System.Diagnostics.Stopwatch inputBlinkTimer;
+        private bool inputCursorActive;
+        public bool showInputCursor;
         public string inputString
         {
             get;
@@ -808,6 +801,9 @@ namespace M3FinchControl
             get;
             private set;
         }
+
+        const char INPUT_IDENTIFIER = '\u2017';
+        const int CURSOR_BLINK_RATE = 400;
     }
     #endregion
 }
