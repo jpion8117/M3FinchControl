@@ -469,6 +469,7 @@ namespace M3FinchControl
                 case "configureRecorder":
                     if (onSelect)
                     {
+                        menus[currentMenu].showInputCursor = true;
                         ConfigureRecorder();
                     }
                     else
@@ -577,6 +578,8 @@ namespace M3FinchControl
                 case "configureAlarm":
                     if(onSelect)
                     {
+                        menus[currentMenu].showInputCursor = true;
+
                         FinchAlarm.GetConfigFromUser();
 
                         //display settings saved confirmation
@@ -611,24 +614,50 @@ namespace M3FinchControl
                             bool swapCycle = false;
                             System.Diagnostics.Stopwatch timer = new System.Diagnostics.Stopwatch();
                             System.Diagnostics.Stopwatch phaseSwapTimer = new System.Diagnostics.Stopwatch();
+                            System.Diagnostics.Stopwatch animationTimer = new System.Diagnostics.Stopwatch();
+                            string animation = ".";
+                            int animationDotCount = 0;
+                            int sensorData = 0;
 
-                            //inform user of escape proceedure
-                            menus[currentMenu].Clear();
-                            menus[currentMenu].WriteLine("Monitoring in progress. Press esc to abort monitoring...\n");
 
                             //start the timers
                             timer.Start();
                             phaseSwapTimer.Start();
+                            animationTimer.Start();
 
                             while (alarmActive)
                             {
+                                    //inform user of escape proceedure
+                                    menus[currentMenu].Clear();
+                                    menus[currentMenu].WriteLine("Monitoring in progress. Press esc to abort monitoring...\n\n" +
+                                                                 "Sensor: " + FinchAlarm.dataSensorStr +
+                                                                 "\nCurrent: " + sensorData.ToString() + 
+                                                                 "\n\n" + animation);
+
+                                    FinchAlarm.ProcessAlarmCycle(swapCycle, out sensorData);
+
                                 if (phaseSwapTimer.ElapsedMilliseconds >= 500)
                                 {
                                     phaseSwapTimer.Restart();
                                     swapCycle = !swapCycle;
                                 }
 
-                                FinchAlarm.ProcessAlarmCycle(swapCycle);
+                                if (animationTimer.ElapsedMilliseconds > 250)
+                                {
+                                    animationTimer.Restart();
+
+                                    if (animationDotCount < 30)
+                                    {
+                                        animation += "  .";
+                                    }
+                                    else
+                                    {
+                                        animation = ".";
+                                        animationDotCount = 0;
+                                    }
+
+                                    animationDotCount++;
+                                }
 
                                 //check for escape key
                                 if (Console.KeyAvailable)

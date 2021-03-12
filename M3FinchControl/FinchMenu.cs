@@ -681,16 +681,6 @@ namespace M3FinchControl
             //clear output console area
             Console.SetCursorPosition(properties.outputLeft, properties.outputTop);
 
-            for (int line = 0; line < formatedOutput.Length; ++line)
-            {
-                Console.CursorTop = properties.outputTop + line;
-
-                for (int curChar = 0; curChar < properties.maxCharPerLine; ++curChar)
-                {
-                    Console.CursorLeft = properties.outputLeft + curChar;
-                    Console.Write(" ");
-                }
-            }
         }
         /// <summary>
         /// Simple function that writes a string to the output area inline, works just like Console.Write but only effects the menu IO area

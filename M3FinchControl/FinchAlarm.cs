@@ -745,7 +745,7 @@ namespace M3FinchControl
             }
         }
 
-        static public void ProcessAlarmCycle(bool switchCycle)
+        static public void ProcessAlarmCycle(bool switchCycle, out int sensorOuput)
         {
             // *************
             // * Variables *
@@ -771,6 +771,9 @@ namespace M3FinchControl
                     sensorData = (int)Program.myFinch.getTemperature();
                     break;
             }
+
+            //output sensor data
+            sensorOuput = sensorData;
 
             //flip phase every second
             alarmPhaseOne = switchCycle;
