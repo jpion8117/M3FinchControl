@@ -59,6 +59,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Include="userProgramming.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="config\DataRecorder.txt">
