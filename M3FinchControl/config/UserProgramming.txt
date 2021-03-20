@@ -8,10 +8,10 @@
 ###                                ###                             #                                                                             ###
 ######################################                             #                                                                             ###
 ###                   |            ###                             #                                                                             ###
+###     Connect Finch |            ###                             #                                                                             ###
+###                   |            ###                             #                                                                             ###
 ###      Set Commands |            ###                             #                                                                             ###
 ###  Execute Commands |            ###                             #                                                                             ###
-###                   |            ###                             #                                                                             ###
-###                   |            ###                             #                                                                             ###
 ###                   |            ###                             #                                                                             ###
 ###                   |            ###                             #                                                                             ###
 ###                   |            ###                             #                                                                             ###
@@ -50,10 +50,10 @@
 	output={70, 2, 145, 39}
 	CommandWindow={39, 2, 66, 39}
 	options={
+		connectMenu,
+		__NULL_LINE__,
 		setCommands,
 		runCommands,
-		__NULL_LINE__,
-		__NULL_LINE__,
 		__NULL_LINE__,
 		__NULL_LINE__,
 		__NULL_LINE__,

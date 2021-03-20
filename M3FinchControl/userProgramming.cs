@@ -33,9 +33,22 @@ namespace M3FinchControl
         /// <param name="Note">Shuts off note</param>
         public void SetShutoff(bool Motors, bool LED, bool Note)
         {
+            modifier = "";
+
             shutoff.Motors = Motors;
             shutoff.LED = LED;
             shutoff.Note = Note;
+
+            if (Motors && LED && Note)
+            {
+                modifier = "A";
+            }
+            else
+            {
+                if (Motors) modifier += "M";
+                if (LED) modifier += "L";
+                if (Note) modifier += "B";
+            }
         }
 
         private (bool Motors, bool LED, bool Note) shutoff;
