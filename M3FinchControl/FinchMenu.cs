@@ -85,7 +85,7 @@ namespace M3FinchControl
         /// when I wrote this...
         /// </summary>
         /// <param name="templateFilename">File path and name for a valid preformated menu template</param>
-        public void LoadTemplate(string templateFilename)
+        public virtual void LoadTemplate(string templateFilename)
         {
             //
             // variables
@@ -268,7 +268,7 @@ namespace M3FinchControl
         /// <param name="tag">This is the data tag being searched for (don't include the '=')</param>
         /// <param name="dataOut">This is a redundant method of returning the results</param>
         /// <returns>method returns an array containing all individual fields of data contained in the data tag</returns>
-        private string[] SearchInfoTag(string[] searchField, string tag, out string[] dataOut)
+        protected string[] SearchInfoTag(string[] searchField, string tag, out string[] dataOut)
         {
             //
             // Variables
@@ -400,7 +400,7 @@ namespace M3FinchControl
         /// 
         /// </summary>
         /// <param name="fullReload"></param>
-        public void RefreshMenu(bool fullReload = false)
+        public virtual void RefreshMenu(bool fullReload = false)
         {
             // *************
             // * Variables *
@@ -562,9 +562,14 @@ namespace M3FinchControl
                 }
             }
         }
+
+        public void RefreshOnHover()
+        {
+            onHoverUpdate = true;
+        }
         #endregion
 
-        private void DisplayOutput()
+        protected void DisplayOutput()
         {
             //THE SOLUTION TO (almost) ALL MY PROBLEMS!!!
             //combine the output and input into a single string
@@ -761,35 +766,35 @@ namespace M3FinchControl
 
         //data members? not sure exactly what these are called in C#
         public static Finch myFinch; //static data member used to store the Finch robot object
-        private MenuProperties properties;
-        private string[] template;
-        private string[] optionIDs;
-        private string[] formatedOutput;
-        private string selectionIndicator;
-        private string outputString;
-        private int previousSelection;
-        private System.Diagnostics.Stopwatch inputBlinkTimer;
-        private bool inputCursorActive;
+        protected MenuProperties properties;
+        protected string[] template;
+        protected string[] optionIDs;
+        protected string[] formatedOutput;
+        protected string selectionIndicator;
+        protected string outputString;
+        protected int previousSelection;
+        protected System.Diagnostics.Stopwatch inputBlinkTimer;
+        protected bool inputCursorActive;
         public bool showInputCursor;
         public string inputString
         {
             get;
-            private set;
+            protected set;
         }
         public bool enterKeyPressed
         {
             get;
-            private set;
+            protected set;
         }
         public string selectedOption
         {
             get;
-            private set;
+            protected set;
         }
         public bool onHoverUpdate
         {
             get;
-            private set;
+            protected set;
         }
 
         const char INPUT_IDENTIFIER = '\u2017';
