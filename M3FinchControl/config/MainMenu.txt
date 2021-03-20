@@ -6,7 +6,7 @@
 ###      ^ Main Menu               ###             Talent Show |                                                        ###
 ###                                ###           Data Recorder |                                                        ###
 ###                                ###            Alarm System |                                                        ###
-###                                ###                         |                                                        ###
+###                                ###        User Programming |                                                        ###
 ###               *                ###                         |                                                        ###
 ###             *   *              ###                         |                                                        ###
 ###           *       *            ###                    Quit |                                                        ###
@@ -34,7 +34,7 @@
 		talentShowMenu,
 		dataRecordMenu,
 		alarmSystemMenu,
-		__NULL_LINE__,
+		userProgrammingMenu,
 		__NULL_LINE__,
 		__NULL_LINE__,
 		quit

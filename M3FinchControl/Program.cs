@@ -45,7 +45,8 @@ namespace M3FinchControl
             talentShow,
             recorderMenu,
             recorderLogsMenu,
-            alarmSystem
+            alarmSystem,
+            userProgramming
         }
         static void Main(string[] args)
         {
@@ -75,6 +76,10 @@ namespace M3FinchControl
             menus[(int)title.recorderMenu].LoadTemplate("config\\DataRecorder.txt");
             menus[(int)title.recorderLogsMenu].LoadTemplate("config\\ViewDataRecords.txt");
             menus[(int)title.alarmSystem].LoadTemplate("config\\AlarmSystem.txt");
+
+            //load the special menu class for the user programming menu
+            menus[(int)title.userProgramming] = new UserProgrammingMenu();
+            menus[(int)title.userProgramming].LoadTemplate("config\\UserProgramming.txt");
 
             //refresh main menu
             menus[(int)title.main].RefreshMenu(true);
@@ -710,6 +715,84 @@ namespace M3FinchControl
                     }
                     break;
 
+                // *************************
+                // * User Programming Menu *
+                // *************************
+                case "userProgrammingMenu":
+                    if (onSelect)
+                    {
+                        currentMenu = (int)title.userProgramming;
+                        menus[currentMenu].RefreshMenu(true);
+                    }
+                    else
+                    {
+                        menus[currentMenu].WriteLine("Load the user programming menu...");
+                    }
+                    break;
+                case "setCommands":
+                    if (onSelect)
+                    {
+                        UserProgramming.SetCommands();
+
+                        menus[currentMenu].Clear();
+                        menus[currentMenu].showInputCursor = false;
+                        menus[currentMenu].WriteLine("Settings saved. Press any key to continue...");
+                        menus[currentMenu].showInputCursor = true;
+                        Console.ReadKey();
+
+                        menus[currentMenu].RefreshOnHover();
+                        menus[currentMenu].RecallPreviousSelection();
+                    }
+                    else
+                    {
+                        if (finchConnected)
+                        {
+                            menus[currentMenu].WriteLine($"Control {name} using a basic set of user friendly commands...");
+                        }
+                        else
+                        {
+                            menus[currentMenu].WriteLine($"Control your Finch using a basic set of user friendly commands...");
+                        }
+                    }
+                    break;
+                case "runCommands":
+                    if (onSelect)
+                    {
+                        if (finchConnected)
+                        {
+                            foreach (BasicCommand command in UserProgramming.commandList)
+                            {
+                                command.Run();
+                            }
+
+                            //reset finch
+                            myFinch.setLED(0, 255, 0);
+                            myFinch.noteOff();
+                            myFinch.setMotors(0, 0);
+
+                            //let user know the commands are done
+                            menus[currentMenu].showInputCursor = false;
+                            menus[currentMenu].WriteLine("\nAll commands executed successfully. Press any key to continue...");
+                            menus[currentMenu].showInputCursor = true;
+                            Console.ReadKey();
+
+                            menus[currentMenu].RefreshOnHover();
+                            menus[currentMenu].RecallPreviousSelection();
+                        }
+                        else
+                        {
+                            menus[currentMenu].Clear();
+                            menus[currentMenu].WriteLine("Please connect finch before continuing. Press any key to continue...");
+
+                            Console.ReadKey();
+                            menus[currentMenu].Clear();
+                        }
+                    }
+                    else
+                    {
+                        menus[currentMenu].WriteLine("Execute the commands listed to the left...");
+                    }
+                    break;
                 // *******************************
                 // * Universal Selection Options *
                 // *******************************
