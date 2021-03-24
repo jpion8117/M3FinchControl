@@ -66,8 +66,10 @@ namespace M3FinchControl
             // *********************
 
             //configure console color
-            //future revisions may also put this in the config (.jp) file
-            Console.ForegroundColor = ConsoleColor.DarkYellow;
+            ////future revisions may also put this in the config (.jp) file
+            //Console.ForegroundColor = ConsoleColor.DarkYellow;
+            Menu.defaultForeground = ConsoleColor.DarkYellow;
+            Menu.defaultBackground = ConsoleColor.Black;
             
             //load menus
             menus[(int)title.main].LoadTemplate("config\\MainMenu.txt");
@@ -337,13 +339,14 @@ namespace M3FinchControl
             //display a warning if the finch is not connected and the finches name if it is
             if (!onSelect & !finchConnected)
             {
-                menus[currentMenu].WriteLine("WARNING: finch robot not connected...");
+                menus[currentMenu].WriteLine($"{Menu.CHANGE_COLOR}DarkRed;WARNING: finch robot not connected...");
                 menus[currentMenu].WriteLine("            finch related functions will not work until");
-                menus[currentMenu].WriteLine("            your finch is connected!\n");
+                menus[currentMenu].WriteLine("            your finch is connected! \n");
+                menus[currentMenu].Write($"{Menu.CHANGE_COLOR}default;");
             }
             else if (!onSelect)
             {
-                menus[currentMenu].WriteLine(name + " is standing by for commands...\n");
+                menus[currentMenu].WriteLine($"{Menu.CHANGE_COLOR}DarkGreen;{name} is standing by for commands...\n{Menu.CHANGE_COLOR}default;");
             }
 
             switch (menus[currentMenu].selectedOption)

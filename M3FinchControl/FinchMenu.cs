@@ -393,6 +393,39 @@ namespace M3FinchControl
             dataOut = localResult;
             return localResult;
         }
+
+        /// <summary>
+        /// Process a command string inserted into the IO strings
+        /// </summary>
+        /// <param name="CommandStatement">string of the statement being processed</param>
+        protected void stringCmdProcessor(string CommandStatement)
+        {
+            // ********************************
+            // * process color change command *
+            // ********************************
+
+            if (CommandStatement.Contains(CHANGE_COLOR))
+            {
+                //new foreground color
+                ConsoleColor newForeground = defaultForeground;
+
+                //remove comand identifier
+                CommandStatement = CommandStatement.Remove(CommandStatement.IndexOf(CHANGE_COLOR), 1);
+
+                //parse for color
+                if (!Enum.TryParse(CommandStatement, out newForeground))
+                {
+                    if (CommandStatement.ToLower() == "default")
+                    {
+                        newForeground = defaultForeground;
+                    }
+                    else return;
+                }
+
+                //set the color
+                Console.ForegroundColor = newForeground;
+            }
+        }
         #endregion
 
         #region Menu Refresh method
@@ -407,6 +440,16 @@ namespace M3FinchControl
             // *************
             ConsoleKeyInfo key;
             char keyChar;
+
+            //make sure color is consistant
+            if (Console.ForegroundColor != Menu.defaultForeground)
+            {
+                Console.ForegroundColor = Menu.defaultForeground;
+            }
+            if (Console.BackgroundColor != Menu.defaultBackground)
+            {
+                Console.ForegroundColor = Menu.defaultForeground;
+            }
 
             //if the calling method requested a full reload, reload menu from template
             if (fullReload)
@@ -546,16 +589,6 @@ namespace M3FinchControl
                     }
                     else
                     {
-                        ////remove previous input string from the output string;
-                        //if (inputString != "")
-                        //{
-                        //    int inputStringIndex = outputString.Length - inputString.Length;
-                        //    if (inputStringIndex >= 0 & outputString.Length != 0 & inputString.Length > 0)
-                        //    {
-                        //        outputString = outputString.Remove(inputStringIndex);
-                        //    }
-                        //}
-
                         // add char to the input string
                         inputString += keyChar;
                     }
@@ -593,6 +626,7 @@ namespace M3FinchControl
 
             int curChar = 0;
             int charsParsed = 0;
+            int cmdChars = 0;
 
             //find the max output size
             int maxOutputLines = properties.outputBottom - properties.outputTop + 1;
@@ -608,6 +642,7 @@ namespace M3FinchControl
             {
                 //reset the line
                 line = "";
+                cmdChars = 0;
 
                 while (curChar < combinedIOString.Length)
                 {
@@ -615,6 +650,18 @@ namespace M3FinchControl
                     if (curChar - charsParsed == properties.maxCharPerLine - 1)
                     {
                         break;
+                    }
+                    else if (combinedIOString[curChar] == CHANGE_COLOR)
+                    {
+                        //count the number of chars until the end of the color change statement
+                        while (combinedIOString[curChar] != ';')
+                        {
+                            line += combinedIOString[curChar];
+                            curChar++;
+                            cmdChars++;
+                        }
+
+                        line += ';';
                     }
                     else if (combinedIOString[curChar] == '\n')
                     {
@@ -634,7 +681,7 @@ namespace M3FinchControl
                 charsParsed = curChar;
 
                 //fill all remaining chars with spaces
-                for (int i = line.Length - 1; i < properties.maxCharPerLine; ++i)
+                for (int i = line.Length - 1; i < properties.maxCharPerLine + cmdChars; ++i)
                 {
                     line += " ";
                 }
@@ -666,7 +713,31 @@ namespace M3FinchControl
             //display the output
             for (int lineNum = 0; lineNum < formatedOutput.Length; ++lineNum)
             {
+                //move the cursor back to the start position
                 Console.CursorLeft = properties.outputLeft;
+
+                //begin line write loop
+                for (int charNum = 0; charNum < formatedOutput[lineNum].Length; charNum++)
+                {
+                    if (formatedOutput[lineNum][charNum] == CHANGE_COLOR)
+                    {
+                        string commandStatement = "";
+
+                        //locate the command statement
+                        while (formatedOutput[lineNum][charNum] != ';')
+                        {
+                            commandStatement += formatedOutput[lineNum][charNum];
+                            charNum++;
+                        }
+
+                        //remove command statement from the string
+                        formatedOutput[lineNum] = formatedOutput[lineNum].Remove(formatedOutput[lineNum].IndexOf(commandStatement), commandStatement.Length + 1);
+
+                        //process the command statement
+                        stringCmdProcessor(commandStatement);
+                    }
+                }
+                
                 Console.WriteLine(formatedOutput[lineNum]);
             }
         }
@@ -796,7 +867,10 @@ namespace M3FinchControl
             get;
             protected set;
         }
+        public static ConsoleColor defaultBackground;
+        public static ConsoleColor defaultForeground;
 
+        public const char CHANGE_COLOR = '\u00bb';
         const char INPUT_IDENTIFIER = '\u2017';
         const int CURSOR_BLINK_RATE = 400;
     }

@@ -22,6 +22,16 @@ namespace M3FinchControl
             ConsoleKeyInfo key;
             char keyChar;
 
+            //make sure color is consistant
+            if (Console.ForegroundColor != Menu.defaultForeground)
+            {
+                Console.ForegroundColor = Menu.defaultForeground;
+            }
+            if (Console.BackgroundColor != Menu.defaultBackground)
+            {
+                Console.ForegroundColor = Menu.defaultForeground;
+            }
+
             //if the calling method requested a full reload, reload menu from template
             if (fullReload)
             {
