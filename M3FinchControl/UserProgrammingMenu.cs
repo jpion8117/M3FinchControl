@@ -14,7 +14,7 @@ namespace M3FinchControl
             commandsShown = new List<BasicCommand>();
         }
 
-        public override void RefreshMenu(bool fullReload = false)
+        public override void RefreshMenu(bool fullReload = false, bool resetSelectorLocation = true)
         {
             // *************
             // * Variables *

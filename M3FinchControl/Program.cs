@@ -46,7 +46,8 @@ namespace M3FinchControl
             recorderMenu,
             recorderLogsMenu,
             alarmSystem,
-            userProgramming
+            userProgramming,
+            themes
         }
         static void Main(string[] args)
         {
@@ -78,13 +79,18 @@ namespace M3FinchControl
             menus[(int)title.recorderMenu].LoadTemplate("config\\DataRecorder.txt");
             menus[(int)title.recorderLogsMenu].LoadTemplate("config\\ViewDataRecords.txt");
             menus[(int)title.alarmSystem].LoadTemplate("config\\AlarmSystem.txt");
+            menus[(int)title.themes].LoadTemplate("config\\Themes.txt");
 
             //load the special menu class for the user programming menu
             menus[(int)title.userProgramming] = new UserProgrammingMenu();
             menus[(int)title.userProgramming].LoadTemplate("config\\UserProgramming.txt");
 
+            //load the theme
+            ThemeManager.LoadTheme();
+
             //refresh main menu
             menus[(int)title.main].RefreshMenu(true);
+
 
             while (running) 
             {
@@ -108,6 +114,9 @@ namespace M3FinchControl
                     MenuNavigation();
                 }
             }
+
+            //save the theme to the settings file
+            ThemeManager.saveTheme();
         }
 
         #region Basic Finch Controls
@@ -126,6 +135,14 @@ namespace M3FinchControl
         #endregion
 
         #region Menu Navigation Methods
+        static public bool ValidateInput(string prompt, string error = "Invalid Input: Enter 'yes' or 'no' press any key to continue...")
+        {
+            string validatedInput;
+
+            validatedInput = ValidateInput(prompt, new string[] { "yes", "no", "n", "y" }, error);
+
+            return (validatedInput == "yes" | validatedInput == "y");  
+        }
         static public string ValidateInput(string prompt, string[] validInput, string error = "Invalid Input: Press any key to continue...")
         {
             bool validing = true;
@@ -337,14 +354,14 @@ namespace M3FinchControl
             menus[currentMenu].showInputCursor = false;
 
             //display a warning if the finch is not connected and the finches name if it is
-            if (!onSelect & !finchConnected)
+            if (!onSelect & !finchConnected & currentMenu != (int)title.themes)
             {
                 menus[currentMenu].WriteLine($"{Menu.CHANGE_COLOR}DarkRed;WARNING: finch robot not connected...");
                 menus[currentMenu].WriteLine("            finch related functions will not work until");
                 menus[currentMenu].WriteLine("            your finch is connected! \n");
                 menus[currentMenu].Write($"{Menu.CHANGE_COLOR}default;");
             }
-            else if (!onSelect)
+            else if (!onSelect & currentMenu != (int)title.themes)
             {
                 menus[currentMenu].WriteLine($"{Menu.CHANGE_COLOR}DarkGreen;{name} is standing by for commands...\n{Menu.CHANGE_COLOR}default;");
             }
@@ -529,13 +546,38 @@ namespace M3FinchControl
                     if (onSelect)
                     {
                         menus[currentMenu].Clear();
-                        menus[currentMenu].WriteLine("Feature coming soon...");
-                        System.Threading.Thread.Sleep(2000);
+
+                        if (ValidateInput("Would you like export the current data log? "))
+                        {
+                            menus[currentMenu].Write("\n\nFilename: ");
+                            try
+                            {
+                                menus[currentMenu].showInputCursor = true;
+                                recorder.SaveLog($"UserData\\{menus[currentMenu].ReadLine()}.log");
+                            }
+                            catch (ArgumentException)
+                            {
+                                menus[currentMenu].showInputCursor = false;
+                                menus[currentMenu].WriteLine("\n\nFile already exists press any key to continue...");
+                                Console.ReadKey();
+                            }
+
+                            menus[currentMenu].showInputCursor = false;
+                        }
+
                         menus[currentMenu].Clear();
                     }
                     else
                     { 
-                        menus[currentMenu].WriteLine("NOT READY: Save a data log to file...");
+                        menus[currentMenu].WriteLine("Save a data log to file...");
+                        if (recorder.dataAccuired)
+                        {
+                            menus[currentMenu].WriteLine("\n\nThere currently is a record available to save.");
+                        }
+                        else
+                        {
+                            menus[currentMenu].WriteLine("\n\nThere are no records currently avaliable to save.");
+                        }
                     }
                     break;
 
@@ -543,13 +585,40 @@ namespace M3FinchControl
                     if (onSelect)
                     {
                         menus[currentMenu].Clear();
-                        menus[currentMenu].WriteLine("Feature coming soon...");
-                        System.Threading.Thread.Sleep(2000);
-                        menus[currentMenu].Clear();
+
+                        if (ValidateInput("Would you like load a data log from file? "))
+                        {
+                            string[] logFromFile = null;
+
+                            menus[currentMenu].Write("\n\nFilename: ");
+                            try
+                            {
+                                menus[currentMenu].showInputCursor = true;
+                                logFromFile = recorder.LoadLog($"UserData\\{menus[currentMenu].ReadLine()}");
+                            }
+                            catch (ArgumentException)
+                            {
+                                menus[currentMenu].showInputCursor = false;
+                                menus[currentMenu].WriteLine("\n\nFile not found, press any key to continue...");
+                                Console.ReadKey();
+                            }
+
+                            menus[currentMenu].showInputCursor = false;
+
+                            menus[currentMenu].Clear();
+
+                            if (logFromFile != null)
+                            {
+                                foreach (string line in logFromFile)
+                                {
+                                    menus[currentMenu].WriteLine(line);
+                                }
+                            }
+                        }
                     }
                     else
                     {
-                        menus[currentMenu].WriteLine("\n\nNOT READY: Load a data log and display it...");
+                        menus[currentMenu].WriteLine("\n\nLoad a data log and display it...");
                     }
                     break;
 
@@ -795,6 +864,182 @@ namespace M3FinchControl
                     {
                         menus[currentMenu].WriteLine("Execute the commands listed to the left...");
                     }
+                    break;
+                // **********************
+                // * Theme menu options *
+                // **********************
+                case "themeMenu":
+                    if (onSelect)
+                    {
+                        currentMenu = (int)title.themes;
+                        menus[currentMenu].properties.currentOption = (int)ThemeManager.theme;
+                        menus[currentMenu].RefreshMenu(true);
+                    }
+                    else
+                    {
+                        menus[currentMenu].WriteLine("Change the program theme...");
+                    }
+                    break;
+                case "Classic":
+                    if (onSelect)
+                    {
+                        //set the new theme
+                        ThemeManager.SetTheme(menus[currentMenu].selectedOption);
+
+                        //save the theme
+                        Enum.TryParse(menus[currentMenu].selectedOption, out ThemeManager.theme);
+
+                        //return to the main menu
+                        currentMenu = (int)title.main;
+                        menus[currentMenu].RefreshMenu(true);
+                    }
+                    else
+                    {
+                        //set the new theme to be previewed
+                        ThemeManager.SetTheme(menus[currentMenu].selectedOption);
+
+                        //refresh menu so the theme displays correctly
+                        menus[currentMenu].RefreshMenu(true, false);
+
+                        //display the help text at the bottom
+                        menus[currentMenu].WriteLine("Move the selector to preview the themes, press enter on one to save your settings and return to the main menu.");
+                    }
+                    break;
+                case "Fallout":
+                    if (onSelect)
+                    {
+                        //set the new theme
+                        ThemeManager.SetTheme(menus[currentMenu].selectedOption);
+
+                        //save the theme
+                        Enum.TryParse(menus[currentMenu].selectedOption, out ThemeManager.theme);
+
+                        //return to the main menu
+                        currentMenu = (int)title.main;
+                        menus[currentMenu].RefreshMenu(true);
+                    }
+                    else
+                    {
+                        //set the new theme to be previewed
+                        ThemeManager.SetTheme(menus[currentMenu].selectedOption);
+
+                        //refresh menu so the theme displays correctly
+                        menus[currentMenu].RefreshMenu(true, false);
+
+                        //display the help text at the bottom
+                        menus[currentMenu].WriteLine("Move the selector to preview the themes, press enter on one to save your settings and return to the main menu.");
+                    }
+                    break;
+                case "BSOD":
+                    if (onSelect)
+                    {
+                        //set the new theme
+                        ThemeManager.SetTheme(menus[currentMenu].selectedOption);
+
+                        //save the theme
+                        Enum.TryParse(menus[currentMenu].selectedOption, out ThemeManager.theme);
+
+                        //return to the main menu
+                        currentMenu = (int)title.main;
+                        menus[currentMenu].RefreshMenu(true);
+                    }
+                    else
+                    {
+                        //set the new theme to be previewed
+                        ThemeManager.SetTheme(menus[currentMenu].selectedOption);
+
+                        //refresh menu so the theme displays correctly
+                        menus[currentMenu].RefreshMenu(true, false);
+
+                        //display the help text at the bottom
+                        menus[currentMenu].WriteLine("Move the selector to preview the themes, press enter on one to save your settings and return to the main menu.");
+                    }
+                    break;
+                case "ET_Game":
+                    if (onSelect)
+                    {
+                        //set the new theme
+                        ThemeManager.SetTheme(menus[currentMenu].selectedOption);
+
+                        //save the theme
+                        Enum.TryParse(menus[currentMenu].selectedOption, out ThemeManager.theme);
+
+                        //return to the main menu
+                        currentMenu = (int)title.main;
+                        menus[currentMenu].RefreshMenu(true);
+                    }
+                    else
+                    {
+                        //set the new theme to be previewed
+                        ThemeManager.SetTheme(menus[currentMenu].selectedOption);
+
+                        //refresh menu so the theme displays correctly
+                        menus[currentMenu].RefreshMenu(true, false);
+
+                        //display the help text at the bottom
+                        menus[currentMenu].WriteLine("Move the selector to preview the themes, press enter on one to save your settings and return to the main menu.");
+                    }
+                    break;
+                case "Zelda":
+                    if (onSelect)
+                    {
+                        //set the new theme
+                        ThemeManager.SetTheme(menus[currentMenu].selectedOption);
+
+                        //save the theme
+                        Enum.TryParse(menus[currentMenu].selectedOption, out ThemeManager.theme);
+
+                        //return to the main menu
+                        currentMenu = (int)title.main;
+                        menus[currentMenu].RefreshMenu(true);
+                    }
+                    else
+                    {
+                        //set the new theme to be previewed
+                        ThemeManager.SetTheme(menus[currentMenu].selectedOption);
+
+                        //refresh menu so the theme displays correctly
+                        menus[currentMenu].RefreshMenu(true, false);
+
+                        //display the help text at the bottom
+                        menus[currentMenu].WriteLine("Move the selector to preview the themes, press enter on one to save your settings and return to the main menu.");
+                    }
+                    break;
+                case "Grayscale":
+                    if (onSelect)
+                    {
+                        //set the new theme
+                        ThemeManager.SetTheme(menus[currentMenu].selectedOption);
+
+                        //save the theme
+                        Enum.TryParse(menus[currentMenu].selectedOption, out ThemeManager.theme);
+
+                        //return to the main menu
+                        currentMenu = (int)title.main;
+                        menus[currentMenu].RefreshMenu(true);
+                    }
+                    else
+                    {
+                        //set the new theme to be previewed
+                        ThemeManager.SetTheme(menus[currentMenu].selectedOption);
+
+                        //refresh menu so the theme displays correctly
+                        menus[currentMenu].RefreshMenu(true, false);
+
+                        //display the help text at the bottom
+                        menus[currentMenu].WriteLine("Move the selector to preview the themes, press enter on one to save your settings and return to the main menu.");
+                    }
+                    break;
+                case "returnMainFromThemeMenu":
+                        
+                    ThemeManager.SetTheme(ThemeManager.theme.ToString());
+                    menus[currentMenu].RefreshMenu(true, false);
+                    
+                    if (onSelect)
+                    {
+                        currentMenu = (int)title.main;
+                        menus[(int)title.main].RefreshMenu(true);
+                    }                                        
                     break;
                 // *******************************
                 // * Universal Selection Options *
@@ -1213,41 +1458,51 @@ namespace M3FinchControl
             // * Variables *
             // *************
             string name = "";
-            string userInput = "";
             bool namingFinch = true;
+            bool existingName = false;
+            int existingNameIndex = 0;
+            List<string> settingsFile = new List<string>();
+
+            //check settings file to see if there was a previous name used
+            settingsFile.AddRange(System.IO.File.ReadAllLines(ThemeManager.SETTINGS_FILE));
+
+            foreach (string setting in settingsFile) 
+            {
+                if (setting.Contains("previousName:"))
+                {
+                    for (int charIndex = setting.IndexOf(':') + 1; charIndex < setting.Length; charIndex++)
+                    {
+                        name += setting[charIndex];
+                    }
+                }
+            }
+
+            //see if the user wants to overwrite the stored name
+            if (name != "")
+            {
+                namingFinch = !ValidateInput($"You last used the name {name}, would you like to connect with that name? ");
+            }
 
             while (namingFinch)
             {
                 //inform the user that we're going to try connecting to the finch
                 menus[(int)title.connect].Clear();
                 menus[(int)title.connect].WriteLine("We are going to attemt to connect to your Finch.\n");
-                menus[(int)title.connect].Write("What would you like to name it?  ");
+                menus[(int)title.connect].Write("What would you like to name it? ");
 
                 //wait for user enter a name and press enter
                 name = menus[(int)title.connect].ReadLine();
 
-                menus[(int)title.connect].Clear();
-                menus[(int)title.connect].Write("Are you sure you want to name it " + name + "? ");
-
-                //wait for user answer and evaluate
-                userInput = menus[(int)title.connect].ReadLine();
-                if (userInput.ToLower() == "yes")
-                {
-                    namingFinch = false;
-                }
-                else if (userInput.ToLower() == "y") 
-                {
-                    namingFinch = false;
-                }
+                namingFinch = !ValidateInput($"Are you sure you want to name your finch {name}? ");
             }
 
             if (myFinch.connect())
             {
-                menus[(int)title.connect].WriteLine("\n\nConnection to " + name + " was successful!\n\n");
+                menus[(int)title.connect].WriteLine($"\n\nConnection to {name} was successful!\n\nReturning to main menu...");
 
                 myFinch.setLED(0, 255, 0);
 
-                System.Threading.Thread.Sleep(3000);
+                System.Threading.Thread.Sleep(1000);
 
                 menus[(int)title.connect].Clear();
             }
@@ -1265,6 +1520,25 @@ namespace M3FinchControl
 
                 Console.ReadKey();
             }
+
+            //save the name to the settings file
+            for (int index = 0; index < settingsFile.Count; index++)
+            {
+                if (settingsFile[index].Contains("previousName:"))
+                {
+                    existingName = true;
+                    existingNameIndex = index;
+                }
+            }
+            if (existingName)
+            {
+                settingsFile[existingNameIndex] = $"previousName:{name}";
+            }
+            else
+            {
+                settingsFile.Add($"previousName:{name}");
+            }
+            System.IO.File.WriteAllLines(ThemeManager.SETTINGS_FILE, settingsFile);
 
             return name;
         }

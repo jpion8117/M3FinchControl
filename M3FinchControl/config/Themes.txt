@@ -2,14 +2,14 @@
 ###########################################################################################################################
 ###########################################################################################################################
 ###                                ###                         |                                                        ###
-###   Super Finch Control 9000!    ###           Connect Finch |                                                        ###
-###      ^ Main Menu               ###             Talent Show |                                                        ###
-###                                ###           Data Recorder |                                                        ###
-###                                ###            Alarm System |                                                        ###
-###                                ###        User Programming |                                                        ###
-###               *                ###                  Themes |                                                        ###
+###   Super Finch Control 9000!    ###                 Classic |                                                        ###
+###      ^ Main Menu               ###                 Fallout |                                                        ###
+###       ^ Theme Menu             ###                    BSOD |                                                        ###
+###                                ###             ET The Game |                                                        ###
+###                                ###                   Zelda |                                                        ###
+###               *                ###               Grayscale |                                                        ###
 ###             *   *              ###                         |                                                        ###
-###           *       *            ###                    Quit |                                                        ###
+###           *       *            ###                  Return |                                                        ###
 ###         *   *   *   *          ###                         |                                                        ###
 ###        *             *         ########################################################################################
 ###      *   *         *   *       ###                                                                                  ###
@@ -30,13 +30,13 @@
 	selectionIndicator={<--Selection}
 	output={39, 13, 118, 20}
 	options={
-		connectMenu,
-		talentShowMenu,
-		dataRecordMenu,
-		alarmSystemMenu,
-		userProgrammingMenu,
-		themeMenu,
+		Classic,
+		Fallout,
+		BSOD,
+		ET_Game,
+		Zelda,
+		Grayscale,
 		__NULL_LINE__,
-		quit
+		returnMainFromThemeMenu
 	}
 </info>

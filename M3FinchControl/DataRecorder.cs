@@ -83,6 +83,49 @@ namespace M3FinchControl
         {
             return (int)(tempC * 1.8 + 32);
         }
+        public void SaveLog(string filePath)
+        {
+            // *************
+            // * Variables *
+            // *************
+            List<string> fileOut = new List<string>();
+
+            if (System.IO.File.Exists(filePath))
+            {
+                throw new ArgumentException("File already exixts");
+            }
+            else
+            {
+                fileOut.Add($"Data recorded on {DateTime.Now.Date.ToString("d")}\n\n");
+                fileOut.Add(" Entry  | Temp C   | Temp F  ");
+                fileOut.Add("========|==========|=========");
+
+                for (int i = 0; i < temperatures.Length; i++)
+                {
+                    fileOut.Add($"#{i.ToString("D3")}    | {temperatures[i].ToString("D3")}\u00b0C    | {CelsiusToFahrenheit(temperatures[i]).ToString("D3")}\u00b0F");
+                }
+            }
+
+            System.IO.File.WriteAllLines(filePath, fileOut);
+        }
+        public string[] LoadLog(string filePath)
+        {
+            // *************
+            // * Variables *
+            // *************
+            string[] fileIn = null;
+
+            if (System.IO.File.Exists(filePath))
+            {
+                fileIn = System.IO.File.ReadAllLines(filePath);
+            }
+            else
+            {
+                throw new ArgumentException("File not found");
+            }
+
+            return fileIn;
+        }
 
         public readonly int NUMBER_OF_RECORDS;
         public readonly int TIME_BETWEEN_RECORDS;

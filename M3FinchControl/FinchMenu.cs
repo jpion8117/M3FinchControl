@@ -433,7 +433,7 @@ namespace M3FinchControl
         /// 
         /// </summary>
         /// <param name="fullReload"></param>
-        public virtual void RefreshMenu(bool fullReload = false)
+        public virtual void RefreshMenu(bool fullReload = false, bool resetSelectorLocation = true)
         {
             // *************
             // * Variables *
@@ -448,15 +448,18 @@ namespace M3FinchControl
             }
             if (Console.BackgroundColor != Menu.defaultBackground)
             {
-                Console.ForegroundColor = Menu.defaultForeground;
+                Console.BackgroundColor = Menu.defaultBackground;
             }
 
             //if the calling method requested a full reload, reload menu from template
             if (fullReload)
             {
-                //reset the selector position
-                properties.currentOption = 0;
-                selectedOption = optionIDs[properties.currentOption];
+                //reset the selector position if not disabled
+                if (resetSelectorLocation)
+                {
+                    properties.currentOption = 0;
+                    selectedOption = optionIDs[properties.currentOption];
+                }
 
                 //clear the screen set on hover update to true
                 Console.Clear();
@@ -837,7 +840,7 @@ namespace M3FinchControl
 
         //data members? not sure exactly what these are called in C#
         public static Finch myFinch; //static data member used to store the Finch robot object
-        protected MenuProperties properties;
+        public MenuProperties properties;
         protected string[] template;
         protected string[] optionIDs;
         protected string[] formatedOutput;
